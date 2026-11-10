@@ -1,0 +1,1310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DriveVault</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--fg:#1d2330;--mut:#6b7385;--line:#e3e6ec;--acc:#2f6fed;--acc2:#e8effd;--danger:#c93c3c;--ok:#1f8a4c;--warn:#fff6dd;--warnline:#f0d98a;--warntext:#9a5b00}
+@media (prefers-color-scheme:dark){:root{--bg:#14171c;--card:#1c2027;--fg:#e6e9ef;--mut:#959db0;--line:#2c323c;--acc:#5b8ff9;--acc2:#1f2c45;--danger:#ef6b6b;--ok:#4cc27e;--warn:#2e2814;--warnline:#5c4d1d;--warntext:#e5b04a}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Ubuntu,Roboto,sans-serif}
+button,input,select{font:inherit;color:inherit}
+button{white-space:nowrap;border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:8px;cursor:pointer}
+button:hover{border-color:var(--mut)}
+button:disabled{opacity:.5;cursor:default}
+button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+button.danger{color:var(--danger)}
+button.ghost{border-color:transparent;background:transparent;padding:5px 7px}
+button.ghost:hover{background:var(--acc2)}
+button.ghost.primary{background:var(--acc2);color:var(--acc);border-color:transparent;font-weight:600}
+a.link{color:var(--acc);cursor:pointer;text-decoration:none}
+a.link:hover{text-decoration:underline}
+input[type=password],input[type=text],select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--bg)}
+input:focus,select:focus{outline:2px solid var(--acc);outline-offset:-1px}
+input[type=checkbox]{width:16px;height:16px;margin:0;accent-color:var(--acc);cursor:pointer}
+.hidden{display:none!important}
+.center{min-height:100vh;display:grid;place-items:center;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:28px;width:100%;max-width:400px}
+.card h1{margin:0 0 4px;font-size:20px}
+.card p{margin:0 0 18px;color:var(--mut)}
+.card label{display:block;margin:12px 0 6px;font-weight:500}
+.card button.primary{width:100%;margin-top:18px;padding:10px}
+.links{display:flex;justify-content:center;margin-top:14px;font-size:13px}
+.err{color:var(--danger);min-height:20px;margin-top:10px}
+.lockicon{width:40px;height:40px;border-radius:10px;background:var(--acc2);display:grid;place-items:center;margin-bottom:14px;color:var(--acc)}
+.loc{display:flex;gap:11px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:11px 12px;margin:0 0 6px;background:var(--bg)}
+.di{flex:none;width:34px;height:34px;border-radius:8px;background:var(--acc2);color:var(--acc);display:grid;place-items:center}
+.loc .lt,.drv .lt{flex:1;min-width:0}
+.ln{font-weight:600;overflow-wrap:anywhere}
+.ls{color:var(--mut);font-size:12.5px;overflow-wrap:anywhere}
+.loc button{padding:4px 10px;font-size:13px}
+.warnline{font-size:12.5px;color:var(--warntext);margin:6px 0 0}
+.drv{white-space:normal;display:flex;gap:11px;align-items:center;width:100%;text-align:left;padding:10px 12px;margin-top:8px;border-radius:10px}
+.drv.sel{border-color:var(--acc);background:var(--acc2)}
+.tag{font-size:11px;padding:1px 7px;border-radius:9px;background:var(--acc2);color:var(--acc);margin-left:6px;font-weight:500}
+.tabs{display:flex;gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:3px;margin-bottom:4px}
+.tabs button{flex:1;border:0;background:transparent;padding:6px}
+.tabs button.on{background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding:12px 18px;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0;z-index:5}
+header .brand{font-weight:600;display:flex;align-items:center;gap:8px}
+header .spacer{flex:1}
+.hdrloc{color:var(--mut);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40vw}
+.count{display:inline-block;min-width:18px;padding:0 5px;margin-left:4px;border-radius:9px;background:var(--acc2);color:var(--acc);font-size:11.5px;text-align:center}
+.wrap{max-width:1150px;margin:0 auto;padding:16px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.crumbs{flex:1;min-width:200px;display:flex;flex-wrap:wrap;align-items:center;gap:2px;font-size:15px}
+.crumbs a{cursor:pointer;padding:3px 6px;border-radius:6px}
+.crumbs a:hover,.crumbs a.drop{background:var(--acc2)}
+.crumbs span{color:var(--mut)}
+.search{position:relative;width:240px}
+.search input{padding-left:32px}
+.search svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--mut)}
+.banner{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--warn);border:1px solid var(--warnline);padding:9px 12px;border-radius:10px;margin-bottom:12px}
+.banner .spacer,.selbar .spacer{flex:1}
+.selbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--acc2);border:1px solid var(--acc);padding:7px 10px;border-radius:10px;margin-bottom:12px}
+.list{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:22px 24px 1fr 90px 160px 176px;gap:8px;align-items:center;padding:7px 12px;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.row.head{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.04em;background:var(--bg)}
+.row.head [data-k]{cursor:pointer;user-select:none}
+.row.item:hover{background:var(--acc2)}
+.row.item.sel{background:var(--acc2)}
+.row.item.drop{outline:2px dashed var(--acc);outline-offset:-2px}
+.row .name{min-width:0;cursor:pointer}
+.row .name .nm{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .name .sub{display:block;color:var(--mut);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row .num{white-space:nowrap;color:var(--mut);font-variant-numeric:tabular-nums;text-align:right}
+.row .acts{display:flex;justify-content:flex-end;gap:2px;opacity:.3}
+.row:hover .acts,.row.sel .acts{opacity:1}
+.ico{width:18px;height:18px;flex:none}
+.empty{padding:50px;text-align:center;color:var(--mut)}
+.dropzone{position:fixed;inset:0;background:rgba(47,111,237,.12);border:3px dashed var(--acc);display:grid;place-items:center;font-size:20px;font-weight:600;color:var(--acc);z-index:50;pointer-events:none}
+.toast{position:fixed;right:16px;bottom:16px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;min-width:280px;max-width:440px;box-shadow:0 8px 30px rgba(0,0,0,.18);z-index:70}
+.toast .trow{display:flex;gap:12px;align-items:center}
+.toast .trow span{flex:1}
+.prog{height:6px;background:var(--line);border-radius:3px;margin-top:8px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--acc);width:0}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--fg);padding:22px;width:min(420px,92vw)}
+dialog.wide{width:min(520px,94vw)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h3{margin:0 0 12px}
+dialog label{display:block;margin:10px 0 5px}
+dialog p{margin:0 0 10px}
+.btns{display:flex;flex-direction:row-reverse;justify-content:flex-start;gap:8px;margin-top:18px}
+.keybox{font:600 19px/1.4 ui-monospace,Consolas,"Ubuntu Mono",monospace;letter-spacing:.04em;text-align:center;padding:14px;border:1px dashed var(--acc);border-radius:10px;background:var(--acc2);user-select:all;overflow-wrap:anywhere}
+.secrow{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.secrow:first-of-type{border-top:0}
+.secrow .lt{flex:1;min-width:0}
+.ok{color:var(--ok)}
+.viewer{position:fixed;inset:0;background:#0d0f13;z-index:60;display:flex;flex-direction:column}
+.viewer .vbar{display:flex;align-items:center;gap:8px;padding:10px 14px;color:#fff}
+.viewer .vbar b{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.viewer .vbar .vc{color:#aab;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.viewer .vbar button{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:#fff}
+.viewer .vbody{flex:1;position:relative;display:grid;place-items:center;overflow:hidden;padding:0 64px 10px}
+.viewer .vcontent{max-width:100%;max-height:100%;display:grid;place-items:center;overflow:auto}
+.viewer img,.viewer video{max-width:100%;max-height:calc(100vh - 80px);display:block}
+.viewer audio{width:min(520px,80vw)}
+.viewer iframe{width:min(1000px,calc(100vw - 140px));height:calc(100vh - 80px);border:0;background:#fff;border-radius:6px}
+.viewer pre,.viewer .tbl{background:var(--card);color:var(--fg);padding:16px;border-radius:8px;width:min(1000px,calc(100vw - 140px));max-height:calc(100vh - 90px);overflow:auto;white-space:pre-wrap;word-break:break-word;margin:0;font-size:13px}
+.viewer .tbl{white-space:normal;padding:0}
+.viewer table{border-collapse:collapse;font-size:13px}
+.viewer td{border:1px solid var(--line);padding:4px 8px;white-space:nowrap}
+.viewer tr:first-child td{font-weight:600;background:var(--bg);position:sticky;top:0}
+.viewer .nop{color:#ccc;text-align:center}
+.nav{position:absolute;top:50%;transform:translateY(-50%);width:48px;height:72px;border-radius:10px;font-size:30px;line-height:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;display:grid;place-items:center;padding:0}
+.nav:hover{background:rgba(255,255,255,.18)}
+.nav.prev{left:8px}.nav.next{right:8px}
+.hint{color:var(--mut);font-size:12.5px;margin-top:10px}
+.navbtns{display:flex;gap:2px;margin-right:4px}
+.sortsel{width:auto;padding:7px 10px}
+.row.item.dropb{box-shadow:inset 0 3px 0 var(--acc)}
+.row.item.dropa{box-shadow:inset 0 -3px 0 var(--acc)}
+.list.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;padding:10px}
+.list.grid .row.head{display:none}
+.list.grid .row.item{display:flex;flex-direction:column;align-items:stretch;gap:4px;padding:8px;border:1px solid var(--line);border-radius:10px;position:relative;min-width:0}
+.list.grid .row.item>div:first-child{position:absolute;top:12px;left:14px;z-index:1}
+.list.grid .row .th{height:120px;display:grid;place-items:center;border-radius:8px;background:var(--bg);overflow:hidden;cursor:pointer}
+.list.grid .row .th .ico{width:44px;height:44px}
+.list.grid .row .th img{width:100%;height:100%;object-fit:cover}
+.list.grid .row .name{text-align:center}
+.list.grid .row .num.size{text-align:center;font-size:12px;min-height:15px}
+.list.grid .row .num.mod{display:none}
+.list.grid .row .acts{justify-content:center;flex-wrap:wrap}
+.list.grid .empty{grid-column:1/-1}
+.list.grid .row.item.dropb{box-shadow:inset 3px 0 0 var(--acc)}
+.list.grid .row.item.dropa{box-shadow:inset -3px 0 0 var(--acc)}
+.custom-hint{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mut);margin:-4px 0 10px}
+.mvlist{border:1px solid var(--line);border-radius:10px;max-height:46vh;overflow:auto;margin-top:8px}
+.mvrow{display:flex;gap:9px;align-items:center;width:100%;text-align:left;border:0;border-top:1px solid var(--line);border-radius:0;padding:9px 12px;background:transparent}
+.mvrow:first-child{border-top:0}
+.mvrow:hover{background:var(--acc2)}
+.mvrow:disabled{opacity:.4}
+.mvpath{display:flex;flex-wrap:wrap;gap:2px;align-items:center;font-size:13.5px}
+.mvpath a{cursor:pointer;padding:2px 5px;border-radius:5px}.mvpath a:hover{background:var(--acc2)}
+header .brand{cursor:pointer}
+.navbtns button{padding:5px 7px}
+.navbtns button:disabled{opacity:.3}
+.row.item.cur{box-shadow:inset 3px 0 0 var(--acc)}
+.row.item{cursor:default;user-select:none}
+.vtools{display:flex;gap:4px;align-items:center}
+.vtools button{padding:5px 9px;min-width:34px}
+.vtools .zl{color:#ccd;font-size:12.5px;min-width:46px;text-align:center;font-variant-numeric:tabular-nums}
+.viewer .vcontent.zoomed{width:100%;height:100%;overflow:auto;display:block;cursor:grab;place-items:initial}
+.viewer .vcontent.zoomed.drag{cursor:grabbing}
+.viewer .vcontent.zoomed img{max-width:none;max-height:none;margin:auto}
+.viewer:fullscreen .vbody{padding:0 64px}
+.viewer:fullscreen img,.viewer:fullscreen video{max-height:calc(100vh - 60px)}
+.viewer:fullscreen iframe{height:calc(100vh - 60px)}
+.xfers{position:fixed;left:16px;bottom:16px;width:min(420px,calc(100vw - 32px));display:flex;flex-direction:column;gap:8px;z-index:70}
+.xfer{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;box-shadow:0 8px 30px rgba(0,0,0,.18)}
+.xfer .xl{display:flex;gap:8px;font-weight:500}
+.xfer .xl span:first-child{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.xfer .xl b{font-variant-numeric:tabular-nums}
+.xfer .xm{color:var(--mut);font-size:12px;margin-top:4px;font-variant-numeric:tabular-nums}
+.hv .hbar{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.chip{border-radius:16px;padding:5px 12px;font-size:13px}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.verify{display:flex;gap:8px;align-items:center;padding:9px 12px;border-radius:10px;margin-bottom:10px;font-size:13px}
+.verify.good{background:color-mix(in srgb,var(--ok) 12%,transparent);color:var(--ok);border:1px solid color-mix(in srgb,var(--ok) 35%,transparent)}
+.verify.bad{background:color-mix(in srgb,var(--danger) 12%,transparent);color:var(--danger);border:1px solid color-mix(in srgb,var(--danger) 35%,transparent)}
+.hrow{display:grid;grid-template-columns:150px 200px 1fr 90px 150px;gap:10px;align-items:center;padding:8px 12px;border-top:1px solid var(--line);font-size:13px}
+.hrow:first-child{border-top:0}
+.hrow.head{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.04em;background:var(--bg)}
+.hrow .t,.hrow .sz{color:var(--mut);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hrow .sz{text-align:right}
+.hrow .it{min-width:0}.hrow .it div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hrow .it .f{color:var(--mut);font-size:12px}
+.hrow .pc{color:var(--mut);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ev{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:9px;background:var(--acc2);color:var(--acc);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.ev.add{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.ev.out{background:color-mix(in srgb,#9a5be8 16%,transparent);color:#8a4fd8}
+.ev.rm{background:color-mix(in srgb,var(--danger) 14%,transparent);color:var(--danger)}
+.ev.sec{background:var(--warn);color:var(--warntext)}
+.logpre{font:12px/1.5 ui-monospace,Consolas,monospace;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;max-height:55vh;overflow:auto;white-space:pre;margin:0}
+.switch{display:flex;gap:8px;align-items:flex-start;font-size:13px;color:var(--fg);cursor:pointer}
+.switch input{margin-top:2px}
+.kbd{font:12px ui-monospace,monospace;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:0 4px}
+@media (max-width:760px){.hrow{grid-template-columns:1fr 110px}.hrow .t,.hrow .sz,.hrow .pc{display:none}#hdrLoc,.hide-sm{display:none}.row{grid-template-columns:22px 24px 1fr 110px}.row .mod,.row .size{display:none}.search{width:100%}.viewer .vbody{padding:0 4px 10px}.nav{width:40px;height:56px;background:rgba(0,0,0,.4)}}
+</style>
+</head>
+<body>
+
+<!-- Lock screen: create / unlock / recover -->
+<div id="vLock" class="center hidden">
+  <form class="card" id="lockForm" autocomplete="off">
+    <div class="lockicon"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+    <h1 id="lockTitle">Unlock vault</h1>
+    <p id="lockSub"></p>
+    <div class="loc" id="loc"></div>
+    <div class="warnline hidden" id="locWarn"></div>
+    <div id="foundVaults"></div>
+    <div id="pwFields">
+      <label for="pw1">Password</label>
+      <input type="password" id="pw1" autofocus>
+      <div id="pw2wrap" class="hidden"><label for="pw2">Confirm password</label><input type="password" id="pw2"></div>
+    </div>
+    <div id="recFields" class="hidden">
+      <div class="tabs" id="recTabs"><button type="button" data-k="key">Recovery key</button><button type="button" data-k="questions">Security questions</button></div>
+      <div id="recKey"><label for="rk">Recovery key</label><input type="text" id="rk" placeholder="XXXXX-XXXXX-XXXXX-XXXXX-XXXXX" spellcheck="false"></div>
+      <div id="recQ"></div>
+      <label for="np1">New password</label><input type="password" id="np1">
+      <label for="np2">Confirm new password</label><input type="password" id="np2">
+    </div>
+    <div class="err" id="lockErr"></div>
+    <button class="primary" id="lockBtn" type="submit">Unlock</button>
+    <div class="links" style="gap:18px"><a class="link hidden" id="forgot">Forgot password?</a><a class="link hidden" id="backPw">Back to password</a><a class="link" id="lockLog">Activity log</a></div>
+    <div class="hint" id="lockHint"></div>
+  </form>
+</div>
+
+<!-- Main -->
+<div id="vMain" class="hidden">
+  <header>
+    <div class="brand"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0"/></svg>DriveVault</div>
+    <span class="hdrloc" id="hdrLoc"></span>
+    <span class="spacer"></span>
+    <button class="ghost" id="bHist" title="History">History</button>
+    <button class="ghost" id="bTrash" title="Trash"><span>Trash</span><span class="count hidden" id="trashCount"></span></button>
+    <button class="ghost" id="bSec">Security</button>
+    <button id="bLock">Lock</button>
+    <button class="primary" id="bQuit">Lock &amp; quit</button>
+  </header>
+  <div class="wrap">
+    <div class="banner hidden" id="recBanner"><span>No password recovery is set up. If the password is forgotten, the files are lost.</span><span class="spacer"></span><button id="bRecSetup">Set up recovery</button><button class="ghost" id="bRecLater">Later</button></div>
+    <div class="banner hidden" id="openBanner"><span id="openText"></span><span class="spacer"></span><button id="bSync">Save changes now</button></div>
+    <div class="banner hidden" id="staleBanner"><span>Decrypted copies from a previous session were left on this computer.</span><span class="spacer"></span><button id="bStaleSave">Save them back</button><button class="danger" id="bStaleDrop">Delete them</button></div>
+    <div class="bar">
+      <div class="navbtns"><button class="ghost" id="nHome" title="Home: top of the vault (Alt+Space or Ctrl+Home)"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg></button><button class="ghost" id="nBack" title="Back (Alt+←)" disabled><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg></button><button class="ghost" id="nFwd" title="Forward (Alt+→)" disabled><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg></button><button class="ghost" id="nUp" title="Up to parent folder (Alt+↑)" disabled><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 15l-6-6-6 6"/></svg></button></div>
+      <div class="crumbs" id="crumbs"></div>
+      <div class="search"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="text" id="search" placeholder="Search the whole vault"></div>
+      <select id="sortSel" class="sortsel" title="Sort order"><option value="n">Sort: Name</option><option value="s">Sort: Size</option><option value="m">Sort: Modified</option><option value="o">Sort: Custom order</option></select>
+      <button class="ghost" id="bView" title="Grid view with photo thumbnails"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg></button>
+      <span id="folderBtns"><button id="bNew">New folder</button> <button id="bUpDir" class="hide-sm">Upload folder</button> <button class="primary" id="bUp">Upload files</button></span>
+      <button class="danger hidden" id="bEmpty">Empty trash</button>
+      <input type="file" id="fFiles" multiple class="hidden">
+      <input type="file" id="fDir" webkitdirectory multiple class="hidden">
+    </div>
+    <div class="custom-hint hidden" id="customHint">Custom order: drag files up or down to arrange them (folders stay on top). Dragging does not move items into folders here; use <b>Move to…</b>. <span class="kbd">Ctrl</span>+<span class="kbd">↑</span>/<span class="kbd">↓</span> moves the selection.</div>
+    <div class="selbar hidden" id="selBar"><b id="selText"></b><span class="spacer"></span><span id="selActs"></span><button class="ghost" id="bSelClear">Clear</button></div>
+    <div class="list" id="list"></div>
+    <div class="hv hidden" id="histView">
+      <div class="hbar">
+        <button class="chip on" data-h="">All</button><button class="chip" data-h="added">Added &amp; saved</button><button class="chip" data-h="out">Opened &amp; copied out</button>
+        <button class="chip" data-h="removed">Deleted &amp; restored</button><button class="chip" data-h="changes">Renamed &amp; moved</button><button class="chip" data-h="access">Access &amp; security</button>
+        <span style="flex:1"></span><button id="hCsv">Export CSV</button><button id="hPlain">Open plain log</button>
+      </div>
+      <div class="verify" id="hVerify"></div>
+      <div class="list" id="hList"></div>
+      <div style="text-align:center;margin-top:10px"><button class="hidden" id="hMore">Load more</button></div>
+      <div class="hint">This history is stored encrypted inside the vault, and every entry is numbered and sealed, so missing or edited entries are detected.
+        A second, plain-text copy is written to <b id="hLogPath"></b> for reading without the password.</div>
+      <label class="switch" style="margin-top:10px"><input type="checkbox" id="hNames"><span>Include file and folder names in the plain-text log.
+        <span class="hint" style="display:block;margin-top:2px">Off by default: anyone holding the drive can read that file, and names alone can reveal a lot. When off, it still records every action, time, size and computer.</span></span></label>
+    </div>
+    <div class="hint" id="footHint"><b id="verTag"></b> · Files stay encrypted on the drive. "Open" and "Show in folder" make a temporary decrypted copy on this computer; your edits are saved back into the vault and the copy is deleted when you lock.
+      Shortcuts: <span class="kbd">↑</span> <span class="kbd">↓</span> move (<span class="kbd">Shift</span> to select), <span class="kbd">Ctrl</span>+<span class="kbd">C</span> / <span class="kbd">V</span> copy and paste with your file manager, <span class="kbd">Alt</span>+<span class="kbd">←</span> back, <span class="kbd">←</span> <span class="kbd">→</span> <span class="kbd">+</span> <span class="kbd">−</span> <span class="kbd">F</span> in the viewer, <span class="kbd">Del</span> to trash, <span class="kbd">F2</span> rename, <span class="kbd">Ctrl</span>+<span class="kbd">A</span> select all.</div>
+  </div>
+</div>
+
+<div class="dropzone hidden" id="dropzone">Drop to encrypt into this folder</div>
+<div class="toast hidden" id="toast"><div class="trow"><span id="toastText"></span><button class="hidden" id="toastBtn"></button></div><div class="prog" id="prog"><i id="progBar"></i></div></div>
+<div class="xfers" id="xfers"></div>
+<dialog id="logDlg" class="wide" style="width:min(900px,94vw)"><h3>Activity log (unencrypted)</h3><p class="hint" id="logPath" style="margin-top:0"></p><pre class="logpre" id="logText"></pre><div class="btns"><button id="logClose">Close</button></div></dialog>
+
+<!-- generic prompt -->
+<dialog id="dlg"><form method="dialog" id="dlgForm"><h3 id="dlgTitle"></h3><div id="dlgBody"></div><div class="err" id="dlgErr"></div><div class="btns"><button class="primary" value="ok" id="dlgOk">OK</button><button value="cancel" formnovalidate>Cancel</button></div></form></dialog>
+
+<!-- move to folder -->
+<dialog id="mvDlg" class="wide"><h3 id="mvTitle">Move to…</h3><div class="mvpath" id="mvPath"></div><div class="mvlist" id="mvList"></div><div class="err" id="mvErr"></div>
+  <div class="btns"><button class="primary" id="mvHere">Move here</button><button id="mvNew">New folder</button><button id="mvCancel">Cancel</button></div></dialog>
+
+<!-- drive picker -->
+<dialog id="drvDlg"><h3>Choose the drive to protect</h3><p class="hint" style="margin-top:0">DriveVault creates an encrypted <b>DriveVault</b> folder on the drive you pick and copies itself there, so you can open it from that drive on any computer. Other files on the drive are not changed.</p><div id="drvList"></div>
+  <label for="drvPath" style="margin-top:14px">Or open an existing vault by folder path</label>
+  <div style="display:flex;gap:8px"><input type="text" id="drvPath" placeholder="e.g. E:\ or /media/bob/MyDrive" spellcheck="false"><button id="drvPathGo">Open</button></div>
+  <div class="err" id="drvErr"></div><div class="btns"><button id="drvCancel">Cancel</button><button id="drvRefresh">Refresh</button></div></dialog>
+
+<!-- recovery key display -->
+<dialog id="keyDlg"><h3>Your recovery key</h3>
+  <p>If the password is ever forgotten, this key resets it. Store it somewhere safe and <b>away from the drive</b>: printed, in a password manager, or in a photo on your phone.</p>
+  <div class="keybox" id="keyText"></div>
+  <p class="hint">It is shown only now. Making a new key later replaces this one.</p>
+  <div class="btns"><button class="primary" id="keyDone">I've saved it</button><button id="keyDl">Download .txt</button><button id="keyCopy">Copy</button></div>
+</dialog>
+
+<!-- security settings -->
+<dialog id="secDlg" class="wide"><h3>Security</h3>
+  <div class="secrow"><div class="lt"><div class="ln">Password</div><div class="ls">Used to unlock the vault.</div></div><button id="sPw">Change</button></div>
+  <div class="secrow"><div class="lt"><div class="ln">Recovery key <span id="sKeyState"></span></div><div class="ls">A 25-character key that resets the password. The strongest recovery option.</div></div><button id="sKeyRm" class="ghost danger hidden">Remove</button><button id="sKey">Create</button></div>
+  <div class="secrow"><div class="lt"><div class="ln">Security questions <span id="sQState"></span></div><div class="ls" id="sQText">Three questions only you can answer.</div></div><button id="sQRm" class="ghost danger hidden">Remove</button><button id="sQ">Set up</button></div>
+  <div class="secrow"><div class="lt"><div class="ln">Trusted Android phone <span id="sDevState"></span></div><div class="ls" id="sDevText">Reset a forgotten password from your phone with its fingerprint / PIN. Set it up in the DriveVault Android app: Security → Trust this phone.</div></div><button id="sDevRm" class="ghost danger hidden">Remove</button></div>
+  <div class="btns"><button id="secClose">Close</button></div>
+</dialog>
+
+<!-- security questions setup -->
+<dialog id="qDlg" class="wide"><form id="qForm"><h3>Security questions</h3>
+  <p class="warnline" style="margin:0 0 6px">Questions are weaker than a recovery key: anyone who has the drive and can guess or find all three answers (social media, friends, family) can reset the password. Pick answers only you know. Spelling, capitals and punctuation don't matter.</p>
+  <div id="qRows"></div>
+  <label for="qPw">Current password</label><input type="password" id="qPw">
+  <div class="err" id="qErr"></div>
+  <div class="btns"><button class="primary" type="submit">Save questions</button><button type="button" id="qCancel">Cancel</button></div>
+</form></dialog>
+
+<!-- viewer -->
+<div class="viewer hidden" id="viewer">
+  <div class="vbar"><span class="vc" id="vCount"></span><b id="vName"></b>
+    <span class="vtools" id="vZoom"><button id="zOut" title="Zoom out (−)">−</button><span class="zl" id="zLevel">Fit</span><button id="zIn" title="Zoom in (+)">+</button><button id="zFit" title="Fit to screen (0)">Fit</button><button id="z100" title="Actual size (1)">1:1</button></span>
+    <button id="vFull" title="Full screen (F)">⛶</button><button id="vOpen" class="hide-sm">Open in app</button><button id="vDl">Download</button><button id="vClose">Close ✕</button></div>
+  <div class="vbody" id="vBody"><button class="nav prev" id="vPrev" title="Previous (←)">‹</button><div class="vcontent" id="vContent"></div><button class="nav next" id="vNext" title="Next (→)">›</button></div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+function loadSort() { try { const v = JSON.parse(localStorage.getItem('dvSort')); if (v && v.k) return v; } catch {} return {k: 'n', d: 1}; }
+function saveSort() { try { localStorage.setItem('dvSort', JSON.stringify(sort)); } catch {} }
+const ICON = {
+  dir:'<svg class="ico" viewBox="0 0 24 24" fill="#e8b23a"><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  file:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" opacity=".7"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6"/></svg>',
+  img:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#3a9be8" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-5-5-9 8"/></svg>',
+  vid:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#9a5be8" stroke-width="1.8"><rect x="3" y="5" width="14" height="14" rx="2"/><path d="m17 10 4-2v8l-4-2"/></svg>',
+  aud:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#e85b8a" stroke-width="1.8"><path d="M9 18V5l11-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>',
+  doc:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="#2f6fed" stroke-width="1.8"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h6"/></svg>',
+  open:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>',
+  reveal:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="13" r="2"/></svg>',
+  dl:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11m-5-5 5 5 5-5M5 20h14"/></svg>',
+  ren:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  del:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>',
+  restore:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+  drive:'<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M5 13 7.5 5h9L19 13"/><circle cx="17" cy="16.5" r=".8" fill="currentColor"/></svg>'
+};
+const KIND = [['img', /\.(png|jpe?g|gif|webp|bmp|svg|avif|ico)$/i], ['vid', /\.(mp4|webm|mov|m4v|ogv|mkv)$/i], ['aud', /\.(mp3|m4a|wav|ogg|flac|aac|opus)$/i],
+  ['pdf', /\.pdf$/i], ['docx', /\.docx$/i], ['csv', /\.(csv|tsv)$/i],
+  ['txt', /\.(txt|md|log|json|xml|ya?ml|ini|conf|cfg|py|js|ts|html?|css|sh|bat|ps1|c|cpp|h|java|kt|go|rs|sql|srt|vtt)$/i]];
+const kindOf = it => it && it.t === 'f' ? (KIND.find(([, re]) => re.test(it.n)) || [null])[0] : null;
+const QUESTIONS = ['What was the name of your first school?', "What is your oldest cousin's first name?", 'What was the name of the street you grew up on?',
+  'What was your childhood nickname?', 'In which town was your mother born?', 'What was the make and model of your first phone?',
+  'What was the name of your first teacher?', 'What was your favourite food as a child?', 'What was the name of your first pet?'];
+
+let state = {}, cur = 'root', items = [], shown = [], sort = loadSort(), lockMode = 'unlock', recKind = 'key';
+let view = 'folder', inTrash = false, sel = new Set(), lastClick = -1, searchQ = '';
+
+async function api(path, body, method) {
+  let r;
+  try { r = await fetch(path, {method: method || (body ? 'POST' : 'GET'), headers: body ? {'Content-Type':'application/json'} : {}, body: body ? JSON.stringify(body) : undefined}); }
+  catch { throw new Error('DriveVault is not running any more (its window was closed?). Start it again from the drive.'); }
+  let data = {}; try { data = await r.json(); } catch {}
+  if (!r.ok) throw new Error(data.error || ('Request failed (' + r.status + ')'));
+  return data;
+}
+const fmtSize = n => n < 1024 ? n + ' B' : n < 1048576 ? (n/1024).toFixed(1) + ' KB' : n < 1073741824 ? (n/1048576).toFixed(1) + ' MB' : (n/1073741824).toFixed(2) + ' GB';
+const fmtDate = ms => { const d = new Date(ms); return d.toLocaleDateString([], {day:'numeric', month:'short', year:'numeric'}) + ' ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', hour12:false}); };
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function toast(text, pct, ms, action) {
+  $('#toast').classList.remove('hidden'); $('#toastText').textContent = text;
+  $('#prog').classList.toggle('hidden', pct == null); if (pct != null) $('#progBar').style.width = pct + '%';
+  const b = $('#toastBtn'); b.classList.toggle('hidden', !action);
+  if (action) { b.textContent = action.label; b.onclick = () => { $('#toast').classList.add('hidden'); action.run(); }; }
+  clearTimeout(toast.t); if (ms) toast.t = setTimeout(() => $('#toast').classList.add('hidden'), ms);
+}
+const anyDialogOpen = () => !!document.querySelector('dialog[open]');
+
+// ---------- generic prompt (Enter = OK)
+function ask(title, fields, okText, check) {
+  return new Promise(res => {
+    $('#dlgTitle').textContent = title; $('#dlgErr').textContent = ''; $('#dlgOk').textContent = okText || 'OK';
+    $('#dlgBody').innerHTML = fields.map((f, i) => f.text ? `<p>${esc(f.text)}</p>` :
+      `<label for="df${i}">${esc(f.label)}</label><input id="df${i}" type="${f.type || 'text'}" value="${esc(f.value || '')}">`).join('');
+    const d = $('#dlg'); let done = false;
+    const finish = v => { if (!done) { done = true; res(v); } };
+    $('#dlgForm').onsubmit = async ev => {
+      if (ev.submitter && ev.submitter.value === 'cancel') return;
+      ev.preventDefault();
+      const vals = fields.map((f, i) => f.text ? null : $('#df' + i).value);
+      $('#dlgOk').disabled = true;
+      try { if (check) await check(vals); d.close(); finish(vals); } catch (e) { $('#dlgErr').textContent = e.message; }
+      $('#dlgOk').disabled = false;
+    };
+    d.onclose = () => finish(null);
+    d.showModal();
+    const first = $('#dlgBody input');
+    if (first) { first.focus(); const dot = first.value.lastIndexOf('.'); first.setSelectionRange(0, dot > 0 && first.type === 'text' ? dot : first.value.length); }
+    else $('#dlgOk').focus();
+  });
+}
+const OLD_APPS_NOTE = 'This upgrades the vault to stronger password protection (Argon2id). DriveVault 1.7 and older can\'t open it afterwards, so update DriveVault on your phone and other drives first.';
+const askPassword = (title, okText, check) => ask(title, [{label: 'Current password', type: 'password'}], okText, v => check(v[0]));
+
+// ---------- drive location
+function driveName(d) {
+  if (d.root === '/') return 'This computer';
+  const root = (d.root || '').replace(/\\$/, '');
+  return d.label ? `${d.label} (${root})` : (root || d.base || '');
+}
+function driveSub(d) {
+  const parts = [];
+  if (d.base && d.root && d.base.replace(/[\\/]$/, '') !== d.root.replace(/[\\/]$/, '')) parts.push('Folder: ' + d.base);
+  if (d.fs) parts.push(d.fs === 'vfat' ? 'FAT32' : d.fs.toUpperCase());
+  if (d.total) parts.push(`${fmtSize(d.free)} free of ${fmtSize(d.total)}`);
+  return parts.join(' · ');
+}
+function driveWarn(d) {
+  if (d.missing) return 'This drive is not connected. Plug it in or choose another drive.';
+  const w = [];
+  if (d.kind === 'system') w.push("This is your computer's own drive, not the USB drive. Use Change to pick the USB drive.");
+  if (d.fs && !d.phoneOk) w.push(`This drive is ${d.fs.toUpperCase()}. Android phones can't read it; reformat as exFAT if you want phone access.`);
+  return w.join(' ');
+}
+function renderLoc() {
+  const d = state.location || {};
+  $('#loc').innerHTML = `<div class="di">${ICON.drive}</div><div class="lt"><div class="ln">${esc(driveName(d))}</div><div class="ls">${esc(driveSub(d))}</div></div>` +
+    (lockMode === 'recover' ? '' : '<button type="button" id="locChange">Change</button>');
+  if ($('#locChange')) $('#locChange').onclick = pickDrive;
+  const w = driveWarn(d); $('#locWarn').textContent = w; $('#locWarn').classList.toggle('hidden', !w || lockMode === 'recover');
+  $('#hdrLoc').textContent = d.root ? '· ' + driveName(d) : '';
+}
+async function pickDrive() {
+  const dlg = $('#drvDlg'), list = $('#drvList');
+  const draw = async () => {
+    list.innerHTML = '<p class="hint">Looking for drives…</p>';
+    const {drives} = await api('/api/drives');
+    list.innerHTML = '';
+    for (const d of drives) {
+      const b = document.createElement('button'); b.type = 'button';
+      b.className = 'drv' + (state.location && d.base === state.location.base ? ' sel' : '');
+      const tags = (d.hasVault ? '<span class="tag">Has vault</span>' : '') + (d.kind === 'removable' ? '<span class="tag">USB</span>' : '') + (d.kind === 'system' ? '<span class="tag">This PC</span>' : '');
+      b.innerHTML = `<div class="di">${ICON.drive}</div><div class="lt"><div class="ln">${esc(driveName(d))}${tags}</div><div class="ls">${esc(driveSub(d))}</div></div>`;
+      b.onclick = async () => { try { await selectBase(d.base); } catch (e) { toast(e.message, null, 5000); } };
+      list.appendChild(b);
+    }
+    if (!drives.length) list.innerHTML = '<p class="hint">No drives found. Plug in the drive and press Refresh.</p>';
+  };
+  $('#drvRefresh').onclick = draw; $('#drvCancel').onclick = () => dlg.close();
+  $('#drvErr').textContent = ''; $('#drvPath').value = '';
+  $('#drvPathGo').onclick = async () => { try { await selectBase($('#drvPath').value); } catch (e) { $('#drvErr').textContent = e.message; } };
+  $('#drvPath').onkeydown = ev => { if (ev.key === 'Enter') { ev.preventDefault(); $('#drvPathGo').click(); } };
+  dlg.showModal(); try { await draw(); } catch (e) { list.innerHTML = `<p class="err">${esc(e.message)}</p>`; }
+}
+
+// ---------- lock screen
+async function refresh() {
+  state = await api('/api/state');
+  if (state.notice) toast(state.notice, null, 6000);
+  if (!state.unlocked) { if ($('#vLock').classList.contains('hidden')) showLock(); else renderLoc(); return; }
+  $('#vLock').classList.add('hidden'); $('#vMain').classList.remove('hidden'); renderLoc();
+  $('#verTag').textContent = 'DriveVault ' + (state.version || '');
+  updateOpen(state.open); setTrashCount(state.trash);
+  const rec = state.recovery || {};
+  $('#recBanner').classList.toggle('hidden', !!(rec.key || rec.questions || rec.device) || sessionStorageGet('recLater'));
+}
+function sessionStorageGet(k) { try { return sessionStorage.getItem(k); } catch { return null; } }
+function sessionStorageSet(k, v) { try { sessionStorage.setItem(k, v); } catch {} }
+async function showFound() {
+  const box = $('#foundVaults'); box.innerHTML = '';
+  if (lockMode !== 'create') return;
+  let r; try { r = await api('/api/vaults'); } catch { return; }
+  const others = r.vaults.filter(v => !v.here);
+  if (!others.length || lockMode !== 'create') return;
+  box.innerHTML = '<div class="banner" style="margin:10px 0 0;display:block"><b>Existing vault found.</b> Use it instead of creating a new one:</div>';
+  for (const d of others) {
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'drv';
+    b.innerHTML = `<div class="di">${ICON.drive}</div><div class="lt"><div class="ln">${esc(driveName(d))}<span class="tag">Has vault</span></div><div class="ls">${esc(d.base)}</div></div>`;
+    b.onclick = () => selectBase(d.base);
+    box.appendChild(b);
+  }
+}
+async function selectBase(base) {
+  await api('/api/select', {base}); if ($('#drvDlg').open) $('#drvDlg').close();
+  state = await api('/api/state'); showLock();
+}
+function showLock(mode) {
+  clearThumbs();
+  lockMode = mode || (state.exists ? 'unlock' : 'create');
+  closeViewer(); $('#vMain').classList.add('hidden'); $('#vLock').classList.remove('hidden');
+  const rec = state.recovery || {}, create = lockMode === 'create', recover = lockMode === 'recover';
+  $('#lockTitle').textContent = create ? 'Protect a drive' : recover ? 'Reset password' : 'Unlock vault';
+  $('#lockSub').textContent = create ? 'An encrypted vault folder will be created on this drive. Files you put in it need the password.'
+    : recover ? 'Prove it is you, then choose a new password. Your files stay as they are.' : 'Enter the password for the vault on this drive.';
+  $('#pwFields').classList.toggle('hidden', recover);
+  $('#pw2wrap').classList.toggle('hidden', !create);
+  $('#recFields').classList.toggle('hidden', !recover);
+  $('#lockBtn').textContent = create ? 'Create vault' : recover ? 'Reset password & unlock' : 'Unlock';
+  $('#lockHint').textContent = create ? 'Next you will get a recovery key in case the password is ever forgotten.' : '';
+  $('#forgot').classList.toggle('hidden', lockMode !== 'unlock' || !(rec.key || rec.questions));
+  $('#lockHint').textContent = lockMode === 'unlock' && rec.device && !(rec.key || rec.questions) ? `Forgot the password? Plug the drive into the trusted phone (${rec.device}) and reset it in the DriveVault app.` : $('#lockHint').textContent;
+  $('#backPw').classList.toggle('hidden', !recover);
+  $('#lockErr').textContent = '';
+  for (const id of ['pw1', 'pw2', 'rk', 'np1', 'np2']) $('#' + id).value = '';
+  if (recover) {
+    const kinds = [rec.key && 'key', rec.questions && 'questions'].filter(Boolean);
+    if (!kinds.includes(recKind)) recKind = kinds[0];
+    $('#recTabs').classList.toggle('hidden', kinds.length < 2);
+    $('#recQ').innerHTML = (rec.questions || []).map((q, i) => `<label for="ra${i}">${esc(q)}</label><input type="text" id="ra${i}" spellcheck="false">`).join('');
+    setRecKind(recKind);
+  } else $('#pw1').focus();
+  renderLoc(); showFound();
+}
+function setRecKind(k) {
+  recKind = k;
+  $('#recTabs').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  $('#recKey').classList.toggle('hidden', k !== 'key'); $('#recQ').classList.toggle('hidden', k !== 'questions');
+  (k === 'key' ? $('#rk') : $('#ra0'))?.focus();
+}
+$('#recTabs').querySelectorAll('button').forEach(b => b.onclick = () => setRecKind(b.dataset.k));
+$('#forgot').onclick = () => showLock('recover');
+$('#backPw').onclick = () => showLock('unlock');
+$('#lockForm').onsubmit = async ev => {
+  ev.preventDefault();
+  const err = $('#lockErr'), btn = $('#lockBtn'), label = btn.textContent; err.textContent = '';
+  try {
+    btn.disabled = true;
+    let r;
+    if (lockMode === 'recover') {
+      if ($('#np1').value !== $('#np2').value) throw new Error('New passwords do not match.');
+      btn.textContent = 'Checking…';
+      const body = {kind: recKind, password: $('#np1').value};
+      if (recKind === 'key') body.key = $('#rk').value;
+      else body.answers = [...$('#recQ').querySelectorAll('input')].map(i => i.value);
+      r = await api('/api/recover', body);
+      toast('Password reset. Use the new password from now on.', null, 6000);
+    } else if (lockMode === 'create') {
+      const p = $('#pw1').value;
+      if (p !== $('#pw2').value) throw new Error('Passwords do not match.');
+      btn.textContent = 'Creating…';
+      await api('/api/create', {password: p});
+      try { const k = await api('/api/security/key', {password: p}); showKey(k.key); } catch {}
+      r = {};
+    } else {
+      btn.textContent = 'Unlocking…';
+      r = await api('/api/unlock', {password: $('#pw1').value});
+    }
+    for (const id of ['pw1', 'pw2', 'rk', 'np1', 'np2']) $('#' + id).value = '';
+    $('#staleBanner').classList.toggle('hidden', !r.stale);
+    cur = 'root'; view = 'folder'; $('#search').value = ''; await refresh(); await load();
+  } catch (e) { err.textContent = e.message; }
+  btn.disabled = false; btn.textContent = label;
+};
+
+// ---------- listing
+let navBack = [], navFwd = [], cursor = -1, parentId = null;
+async function load(id, opts = {}) {
+  if (view === 'history' && !id) id = cur;
+  if (id) {
+    if (!opts.nav && id !== cur && view !== 'history') { navBack.push(cur); navFwd = []; }
+    cur = id; view = 'folder'; $('#search').value = ''; searchQ = '';
+  }
+  leaveHistory();
+  sel.clear(); lastClick = -1; cursor = -1;
+  let r;
+  try {
+    if (view === 'search') r = await api('/api/search?q=' + encodeURIComponent(searchQ));
+    else r = await api('/api/list?id=' + encodeURIComponent(cur));
+  } catch (e) { if (/locked/i.test(e.message)) return refresh(); if (cur !== 'root') { cur = 'root'; return load(); } return toast(e.message, null, 5000); }
+  items = r.items;
+  if (view === 'search') {
+    inTrash = false;
+    $('#crumbs').innerHTML = `<a data-id="root">Vault</a><span>›</span><b style="padding:3px 6px">Search: “${esc(searchQ)}” (${items.length})</b>`;
+  } else {
+    inTrash = r.inTrash; setTrashCount(r.trash);
+    if (r.path[0].id === 'trash') r.path.unshift({id: 'root', name: 'Vault'});
+    $('#crumbs').innerHTML = r.path.map((p, i) => (i ? '<span>›</span>' : '') + `<a data-id="${p.id}">${esc(p.name)}</a>`).join('');
+    parentId = r.path.length > 1 ? r.path[r.path.length - 2].id : null;
+  }
+  if (view === 'search') parentId = null;
+  updateNav();
+  $('#crumbs').querySelectorAll('a').forEach(a => { a.onclick = () => load(a.dataset.id); if (!inTrash) dropTarget(a, a.dataset.id); });
+  $('#folderBtns').classList.toggle('hidden', inTrash || view === 'search');
+  $('#sortSel').classList.toggle('hidden', false);
+  $('#bEmpty').classList.toggle('hidden', cur !== 'trash' || view === 'search' || !items.length);
+  $('#bTrash').classList.toggle('primary', cur === 'trash' && view !== 'search');
+  render();
+}
+function updateNav() {
+  $('#nBack').disabled = !navBack.length; $('#nFwd').disabled = !navFwd.length; $('#nUp').disabled = !parentId || view === 'history';
+}
+function goBack() { if (view === 'search' || view === 'history') return load(cur, {nav: true}); if (!navBack.length) return; navFwd.push(cur); load(navBack.pop(), {nav: true}); }
+function goFwd() { if (!navFwd.length) return; navBack.push(cur); load(navFwd.pop(), {nav: true}); }
+function goUp() { if (parentId) load(parentId); }
+$('#nBack').onclick = goBack; $('#nFwd').onclick = goFwd; $('#nUp').onclick = goUp;
+window.addEventListener('mouseup', ev => { if (ev.button === 3) { ev.preventDefault(); goBack(); } else if (ev.button === 4) { ev.preventDefault(); goFwd(); } });
+function setTrashCount(n) { state.trash = n; $('#trashCount').textContent = n; $('#trashCount').classList.toggle('hidden', !n); }
+const isCustom = () => sort.k === 'o' && view === 'folder' && !inTrash;
+function render() {
+  const trashTop = cur === 'trash' && view !== 'search', custom = isCustom();
+  const byName = (a, b) => a.n.localeCompare(b.n, undefined, {numeric:true});
+  const key = sort.k === 'o' && !custom ? 'n' : sort.k;
+  shown = items.slice().sort((a, b) => (a.t === b.t ? 0 : a.t === 'd' ? -1 : 1) || (key === 'o'
+    ? ((a.o ?? Infinity) - (b.o ?? Infinity)) || byName(a, b)
+    : (key === 'n' ? byName(a, b) : ((a[key] || 0) - (b[key] || 0))) * sort.d));
+  $('#sortSel').value = sort.k;
+  $('#customHint').classList.toggle('hidden', !custom);
+  const arrow = k => sort.k === k ? (sort.d > 0 ? ' ↑' : ' ↓') : '';
+  const allSel = shown.length && shown.every(i => sel.has(i.id));
+  let h = `<div class="row head"><div><input type="checkbox" id="selAll" ${allSel ? 'checked' : ''} title="Select all"></div><div></div><div data-k="n">Name${arrow('n')}</div>
+    <div class="num size" data-k="s">Size${arrow('s')}</div><div class="num mod" data-k="${trashTop ? 'x' : 'm'}">${trashTop ? 'Deleted' : 'Modified'}${arrow(trashTop ? 'x' : 'm')}</div><div></div></div>`;
+  if (!shown.length) h += `<div class="empty">${view === 'search' ? 'Nothing found.' : trashTop ? 'Trash is empty.' : inTrash ? 'This folder is empty.' : 'This folder is empty. Drop files here or use Upload.'}</div>`;
+  shown.forEach((i, idx) => {
+    const k = kindOf(i), ic = i.t === 'd' ? ICON.dir : ({img: ICON.img, vid: ICON.vid, aud: ICON.aud, pdf: ICON.doc, docx: ICON.doc, csv: ICON.doc, txt: ICON.doc}[k] || ICON.file);
+    const sub = view === 'search' ? 'in ' + i.where : trashTop ? 'from ' + (i.from || 'Vault') : '';
+    let acts;
+    if (trashTop) acts = `<button class="ghost" data-a="restore" title="Restore">${ICON.restore}</button><button class="ghost danger" data-a="purge" title="Delete forever">${ICON.del}</button>`;
+    else if (inTrash) acts = i.t === 'f' ? `<button class="ghost" data-a="dl" title="Download">${ICON.dl}</button>` : '';
+    else acts = (i.t === 'f' ? `<button class="ghost hide-sm" data-a="open" title="Open in app">${ICON.open}</button><button class="ghost" data-a="dl" title="Download">${ICON.dl}</button>` : `<button class="ghost hide-sm" data-a="export" title="Copy folder to this computer">${ICON.dl}</button>`) +
+      `<button class="ghost hide-sm" data-a="reveal" title="Show in ${navigator.platform.startsWith('Win') ? 'Explorer' : 'Files'}">${ICON.reveal}</button>
+       <button class="ghost" data-a="ren" title="Rename (F2)">${ICON.ren}</button><button class="ghost danger" data-a="trash" title="Move to Trash (Del)">${ICON.del}</button>`;
+    const th = grid && k === 'img' && i.s <= THUMB_MAX && thumbs.get(i.id) !== 'x' ? `<img class="thumb" alt="" data-id="${i.id}"${thumbs.get(i.id) ? ` src="${thumbs.get(i.id)}"` : ''}>` : ic;
+    h += `<div class="row item${sel.has(i.id) ? ' sel' : ''}${idx === cursor ? ' cur' : ''}" draggable="${!inTrash}" data-idx="${idx}">
+      <div><input type="checkbox" class="ck" ${sel.has(i.id) ? 'checked' : ''}></div><div class="th">${th}</div>
+      <div class="name" title="${esc(i.n)}"><span class="nm">${esc(i.n)}</span>${sub ? `<span class="sub">${esc(sub)}</span>` : ''}</div>
+      <div class="num size">${i.t === 'd' ? '' : fmtSize(i.s)}</div><div class="num mod">${fmtDate(trashTop ? i.x : i.m)}</div><div class="acts">${acts}</div></div>`;
+  });
+  $('#list').innerHTML = h;
+  $('#list').classList.toggle('grid', grid);
+  $('#bView').classList.toggle('primary', grid);
+  $('#bView').title = grid ? 'List view' : 'Grid view with photo thumbnails';
+  $('#selAll').onchange = e => { shown.forEach(i => e.target.checked ? sel.add(i.id) : sel.delete(i.id)); render(); };
+  $('#list').querySelectorAll('.head [data-k]').forEach(el => el.onclick = () => { sort = {k: el.dataset.k, d: sort.k === el.dataset.k ? -sort.d : 1}; saveSort(); render(); });
+  $('#list').querySelectorAll('.row.item').forEach(row => {
+    const idx = +row.dataset.idx, it = shown[idx];
+    row.querySelector('.ck').onclick = ev => { ev.stopPropagation(); toggleSel(idx, ev.shiftKey); };
+    row.querySelector('.name').onclick = ev => { ev.stopPropagation(); if (ev.ctrlKey || ev.metaKey || ev.shiftKey) return clickSel(idx, ev); cursor = idx; openItem(it); };
+    if (grid) row.querySelector('.th').onclick = row.querySelector('.name').onclick;
+    row.onclick = ev => { if (ev.target.closest('button,input')) return; clickSel(idx, ev); };
+    row.ondblclick = ev => { if (ev.target.closest('button,input')) return; openItem(it); };
+    row.querySelectorAll('[data-a]').forEach(b => b.onclick = ev => { ev.stopPropagation(); act(b.dataset.a, [it]); });
+    if (custom) reorderTarget(row, idx);
+    else if (!inTrash) {
+      row.ondragstart = ev => { const ids = sel.has(it.id) ? [...sel] : [it.id]; ev.dataTransfer.setData('text/x-dv', JSON.stringify(ids)); ev.dataTransfer.effectAllowed = 'move'; };
+      if (it.t === 'd') dropTarget(row, it.id);
+    }
+  });
+  updateSelBar();
+  if (grid) loadThumbs();
+}
+// ---------- grid view + thumbnails. The server decrypts the photo into memory (no-store, so the browser keeps no
+// disk copy); it is shrunk here and the small copy is kept in memory only, and dropped on lock.
+const THUMB_MAX = 40 << 20;
+let grid = (() => { try { return localStorage.getItem('dvView') === 'grid'; } catch { return false; } })();
+$('#bView').onclick = () => { grid = !grid; try { localStorage.setItem('dvView', grid ? 'grid' : 'list'); } catch {} render(); };
+const thumbs = new Map();            // id -> object URL, '' while loading, 'x' if it can't be shown
+let thumbQueue = [], thumbBusy = 0, thumbGen = 0;
+function clearThumbs() {
+  thumbGen++; thumbQueue = [];
+  for (const u of thumbs.values()) if (u && u !== 'x') URL.revokeObjectURL(u);
+  thumbs.clear();
+}
+async function makeThumb(id) {
+  const r = await fetch('/api/file?thumb=1&id=' + encodeURIComponent(id));
+  if (!r.ok) throw new Error(r.statusText);
+  const bmp = await createImageBitmap(await r.blob());
+  const s = Math.min(1, 320 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(bmp.width * s)); c.height = Math.max(1, Math.round(bmp.height * s));
+  c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height); bmp.close();
+  return URL.createObjectURL(await new Promise(res => c.toBlob(res, 'image/jpeg', 0.85)));
+}
+function loadThumbs() {
+  $('#list').querySelectorAll('img.thumb:not([src])').forEach(img => { if (!thumbs.has(img.dataset.id)) { thumbs.set(img.dataset.id, ''); thumbQueue.push(img.dataset.id); } });
+  while (thumbBusy < 3 && thumbQueue.length) {
+    const id = thumbQueue.shift(), gen = thumbGen; thumbBusy++;
+    makeThumb(id).then(u => u, () => 'x').then(u => {
+      thumbBusy--;
+      if (gen !== thumbGen) { if (u !== 'x') URL.revokeObjectURL(u); return; }   // locked meanwhile
+      thumbs.set(id, u);
+      document.querySelectorAll(`img.thumb[data-id="${id}"]`).forEach(img => u === 'x' ? img.replaceWith(document.createRange().createContextualFragment(ICON.img)) : img.src = u);
+      loadThumbs();
+    });
+  }
+}
+// ---------- custom order (drag to reorder; never moves into folders)
+$('#sortSel').onchange = e => { sort = {k: e.target.value, d: 1}; saveSort(); render(); };
+function groupOf(it) { return shown.filter(x => x.t === it.t); }
+async function saveOrder(t, ids, quiet) {
+  const parent = cur;
+  for (const it of items) if (it.t === t) { const i = ids.indexOf(it.id); if (i >= 0) it.o = i; }
+  render();
+  try { await api('/api/reorder', {parent, ids, log: !quiet}); } catch (e) { toast(e.message, null, 5000); load(); }
+}
+let dragIds = null;
+function reorderTarget(row, idx) {
+  const it = shown[idx];
+  row.ondragstart = ev => {
+    dragIds = (sel.has(it.id) ? selectedItems() : [it]).filter(x => x.t === it.t).map(x => x.id);
+    ev.dataTransfer.setData('text/x-dvorder', '1'); ev.dataTransfer.effectAllowed = 'move';
+  };
+  row.ondragend = () => { dragIds = null; document.querySelectorAll('.dropb,.dropa').forEach(x => x.classList.remove('dropb', 'dropa')); };
+  row.addEventListener('dragover', ev => {
+    if (!dragIds || !ev.dataTransfer.types.includes('text/x-dvorder')) return;
+    const first = items.find(x => x.id === dragIds[0]);
+    if (!first || first.t !== it.t) return;          // folders and files are ordered separately
+    ev.preventDefault(); ev.dataTransfer.dropEffect = 'move';
+    const r = row.getBoundingClientRect(), after = grid ? ev.clientX > r.left + r.width / 2 : ev.clientY > r.top + r.height / 2;
+    document.querySelectorAll('.dropb,.dropa').forEach(x => x !== row && x.classList.remove('dropb', 'dropa'));
+    row.classList.toggle('dropa', after); row.classList.toggle('dropb', !after);
+  });
+  row.addEventListener('dragleave', () => row.classList.remove('dropb', 'dropa'));
+  row.addEventListener('drop', ev => {
+    if (!dragIds) return;
+    ev.preventDefault();
+    const after = row.classList.contains('dropa'); row.classList.remove('dropb', 'dropa');
+    const group = groupOf(it).map(x => x.id), moving = group.filter(id => dragIds.includes(id));
+    if (!moving.length || moving.includes(it.id) && moving.length === 1) return;
+    const rest = group.filter(id => !moving.includes(id));
+    let pos = rest.indexOf(it.id);
+    if (pos < 0) pos = group.indexOf(it.id); else if (after) pos++;
+    rest.splice(pos, 0, ...moving);
+    saveOrder(it.t, rest);
+  });
+}
+function nudge(where) {
+  const chosen = selectedItems(); if (!chosen.length || !isCustom()) return;
+  for (const t of ['d', 'f']) {
+    const group = shown.filter(x => x.t === t).map(x => x.id), picked = new Set(chosen.filter(x => x.t === t).map(x => x.id));
+    if (!picked.size) continue;
+    let order;
+    if (where === 'top') order = [...group.filter(id => picked.has(id)), ...group.filter(id => !picked.has(id))];
+    else if (where === 'bottom') order = [...group.filter(id => !picked.has(id)), ...group.filter(id => picked.has(id))];
+    else {
+      order = group.slice();
+      const idxs = order.map((id, i) => picked.has(id) ? i : -1).filter(i => i >= 0);
+      if (where === 'down') idxs.reverse();
+      for (const i of idxs) {
+        const j = where === 'up' ? i - 1 : i + 1;
+        if (j < 0 || j >= order.length || picked.has(order[j])) continue;
+        [order[i], order[j]] = [order[j], order[i]];
+      }
+    }
+    saveOrder(t, order);
+  }
+  const first = shown.findIndex(x => sel.has(x.id)); if (first >= 0) { cursor = first; render(); }
+}
+
+// ---------- Move to… (folder picker)
+async function moveDialog(list) {
+  const ids = list.map(i => i.id), dlg = $('#mvDlg'); let at = 'root';
+  $('#mvTitle').textContent = `Move ${list.length === 1 ? '"' + list[0].n + '"' : list.length + ' items'} to…`;
+  const draw = async () => {
+    $('#mvErr').textContent = '';
+    let r; try { r = await api('/api/list?id=' + encodeURIComponent(at)); } catch (e) { $('#mvErr').textContent = e.message; return; }
+    $('#mvPath').innerHTML = r.path.map((p, i) => (i ? '<span>›</span>' : '') + `<a data-id="${p.id}">${esc(p.name)}</a>`).join('');
+    $('#mvPath').querySelectorAll('a').forEach(a => a.onclick = () => { at = a.dataset.id; draw(); });
+    const dirs = r.items.filter(i => i.t === 'd').sort((a, b) => a.n.localeCompare(b.n, undefined, {numeric: true}));
+    $('#mvList').innerHTML = dirs.length ? '' : '<div class="empty" style="padding:24px">No folders here.</div>';
+    for (const d of dirs) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'mvrow'; b.disabled = ids.includes(d.id);
+      b.innerHTML = `${ICON.dir}<span>${esc(d.n)}</span>`; b.onclick = () => { at = d.id; draw(); };
+      $('#mvList').appendChild(b);
+    }
+    $('#mvHere').disabled = at === cur && view === 'folder';
+  };
+  $('#mvHere').onclick = async () => {
+    try { await busy(api('/api/move', {ids, parent: at})); dlg.close(); toast(`Moved ${list.length} item(s).`, null, 3000); load(); }
+    catch (e) { $('#mvErr').textContent = e.message; }
+  };
+  $('#mvNew').onclick = async () => {
+    const v = await ask('New folder', [{label: 'Folder name', value: 'New folder'}], 'Create', async v => { at = (await api('/api/mkdir', {parent: at, name: v[0]})).id; });
+    if (v) draw();
+  };
+  $('#mvCancel').onclick = () => dlg.close();
+  dlg.showModal(); draw();
+}
+
+// ---------- home
+function goHome() { closeViewer(); if ($('#dlg').open) return; load('root'); }
+$('#nHome').onclick = goHome;
+document.querySelector('header .brand').onclick = () => { if (state.unlocked) goHome(); };
+
+function clickSel(idx, ev) {
+  if (ev.shiftKey && lastClick >= 0) { selectRange(lastClick, idx, ev.ctrlKey || ev.metaKey); }
+  else if (ev.ctrlKey || ev.metaKey) { sel.has(shown[idx].id) ? sel.delete(shown[idx].id) : sel.add(shown[idx].id); lastClick = idx; }
+  else { sel.clear(); sel.add(shown[idx].id); lastClick = idx; }
+  cursor = idx; render();
+}
+function selectRange(a, b, keep) {
+  if (!keep) sel.clear();
+  for (let i = Math.min(a, b); i <= Math.max(a, b); i++) sel.add(shown[i].id);
+}
+function moveCursor(to, extend) {
+  if (!shown.length) return;
+  to = Math.max(0, Math.min(shown.length - 1, to));
+  if (extend) { if (lastClick < 0) lastClick = cursor >= 0 ? cursor : to; selectRange(lastClick, to); }
+  else { sel.clear(); sel.add(shown[to].id); lastClick = to; }
+  cursor = to; render();
+  const row = $('#list').querySelector(`.row.item[data-idx="${to}"]`); if (row) row.scrollIntoView({block: 'nearest'});
+}
+function toggleSel(idx, range) {
+  const it = shown[idx], on = !sel.has(it.id);
+  if (range && lastClick >= 0) { const [a, b] = [Math.min(lastClick, idx), Math.max(lastClick, idx)]; for (let i = a; i <= b; i++) sel.add(shown[i].id); }
+  else on ? sel.add(it.id) : sel.delete(it.id);
+  lastClick = idx; cursor = idx; render();
+}
+function updateSelBar() {
+  const n = sel.size, trashTop = cur === 'trash' && view !== 'search';
+  $('#selBar').classList.toggle('hidden', !n);
+  $('#selText').textContent = `${n} selected`;
+  $('#selActs').innerHTML = trashTop ? '<button data-s="restore">Restore</button> <button class="danger" data-s="purge">Delete forever</button>'
+    : inTrash ? '' : (isCustom() ? '<button data-n="top" title="Move to top">⤒ Top</button> <button data-n="up" title="Move up (Ctrl+↑)">↑ Up</button> <button data-n="down" title="Move down (Ctrl+↓)">↓ Down</button> <button data-n="bottom" title="Move to bottom">⤓ Bottom</button> ' : '') +
+      '<button data-s="moveto">Move to…</button> <button data-s="export">Copy to computer</button> <button class="danger" data-s="trash">Move to Trash</button>';
+  $('#selActs').querySelectorAll('[data-s]').forEach(b => b.onclick = () => act(b.dataset.s, selectedItems()));
+  $('#selActs').querySelectorAll('[data-n]').forEach(b => b.onclick = () => nudge(b.dataset.n));
+}
+const selectedItems = () => shown.filter(i => sel.has(i.id));
+$('#bSelClear').onclick = () => { sel.clear(); render(); };
+function dropTarget(el, id) {
+  el.addEventListener('dragover', ev => { if (ev.dataTransfer.types.includes('text/x-dv')) { ev.preventDefault(); ev.stopPropagation(); el.classList.add('drop'); } });
+  el.addEventListener('dragleave', () => el.classList.remove('drop'));
+  el.addEventListener('drop', async ev => {
+    const raw = ev.dataTransfer.getData('text/x-dv'); el.classList.remove('drop');
+    if (!raw) return; ev.preventDefault(); ev.stopPropagation();
+    const ids = JSON.parse(raw).filter(x => x !== id);
+    if (!ids.length) return;
+    try { await api('/api/move', {ids, parent: id}); load(); } catch (e) { toast(e.message, null, 5000); }
+  });
+}
+function openItem(it) { if (it.t === 'd') return load(it.id); openViewer(it); }
+
+async function act(a, list) {
+  if (!list.length) return;
+  const ids = list.map(i => i.id), one = list[0], label = list.length === 1 ? `"${one.n}"` : `${list.length} items`;
+  try {
+    if (a === 'dl') { location.href = '/api/file?dl=1&id=' + one.id; return; }
+    if (a === 'open' || a === 'reveal') {
+      const r = await busy(api('/api/open', {id: one.id, mode: a, copy: !!list.copy}));
+      updateOpen(r.open);
+      if (r.streamed) {
+        const again = Object.assign([one], {copy: true});
+        toast(`Streaming to ${r.streamed} (nothing decrypted to disk). No sound or seeking doesn't work? Open a local copy instead.`, null, 15000,
+          {label: 'Use local copy', run: () => act('open', again)});
+      } else toast(a === 'open' ? 'Opened ' + one.n : 'Shown in folder', null, 2500);
+      return;
+    }
+    if (a === 'moveto') return moveDialog(list);
+    if (a === 'export') {
+      const r = await busy(api('/api/export', {ids}));
+      toast(`Copied ${r.files} file(s), ${fmtSize(r.size)}, to ${r.dest}`, null, 9000); return;
+    }
+    if (a === 'ren') {
+      const v = await ask('Rename', [{label: 'New name', value: one.n}], 'Rename', v => api('/api/rename', {id: one.id, name: v[0]}));
+      if (v) load(); return;
+    }
+    if (a === 'trash') {
+      const r = await api('/api/trash', {ids}); setTrashCount(r.trash); await load();
+      toast(`Moved ${label} to Trash.`, null, 7000, {label: 'Undo', run: async () => { const r2 = await api('/api/restore', {ids}); setTrashCount(r2.trash); load(); }});
+      return;
+    }
+    if (a === 'restore') { const r = await api('/api/restore', {ids}); setTrashCount(r.trash); load(); toast(`Restored ${label}.`, null, 3000); return; }
+    if (a === 'purge') {
+      const ok = await ask(`Delete ${label} forever?`, [{text: 'This cannot be undone. The encrypted data is removed from the drive.'}], 'Delete forever');
+      if (ok) { const r = await busy(api('/api/delete', {ids})); setTrashCount(r.trash); load(); }
+    }
+  } catch (e) { toast(e.message, null, 6000); }
+}
+$('#bTrash').onclick = () => load('trash');
+$('#bEmpty').onclick = async () => {
+  const ok = await ask('Empty trash?', [{text: `${items.length} item(s) will be deleted forever. This cannot be undone.`}], 'Empty trash');
+  if (ok) { try { await busy(api('/api/empty-trash', {})); load(); toast('Trash emptied.', null, 3000); } catch (e) { toast(e.message, null, 5000); } }
+};
+let searchT;
+$('#search').oninput = () => {
+  clearTimeout(searchT);
+  searchT = setTimeout(() => {
+    if (view === 'history') { hOffset = 0; return loadHistory(); }
+    searchQ = $('#search').value.trim();
+    if (searchQ) { view = 'search'; load(); } else if (view === 'search') { view = 'folder'; load(); }
+  }, 220);
+};
+$('#search').onkeydown = ev => { if (ev.key === 'Escape') { $('#search').value = ''; $('#search').oninput(); } };
+function updateOpen(n) {
+  state.open = n;
+  $('#openBanner').classList.toggle('hidden', !n);
+  $('#openText').textContent = `${n} decrypted file${n === 1 ? ' is' : 's are'} open on this computer. Edits are saved into the vault when you lock. Auto-lock is paused.`;
+}
+
+// ---------- viewer with next / previous
+let vList = [], vIdx = 0, mammothP = null;
+function openViewer(it) {
+  const pv = shown.filter(i => kindOf(i));
+  vList = kindOf(it) ? pv : [it];
+  vIdx = Math.max(0, vList.findIndex(i => i.id === it.id));
+  $('#viewer').classList.remove('hidden'); showCurrent();
+}
+function step(d) { if (vList.length > 1) { vIdx = (vIdx + d + vList.length) % vList.length; showCurrent(); } }
+function showCurrent() {
+  const it = vList[vIdx], url = '/api/file?id=' + it.id, c = $('#vContent'), k = kindOf(it);
+  $('#vName').textContent = it.n;
+  $('#vCount').textContent = vList.length > 1 ? `${vIdx + 1} / ${vList.length}` : '';
+  $('#vPrev').classList.toggle('hidden', vList.length < 2); $('#vNext').classList.toggle('hidden', vList.length < 2);
+  $('#vDl').onclick = () => act('dl', [it]); $('#vOpen').onclick = () => act('open', [it]);
+  $('#vOpen').classList.toggle('hidden', inTrash);
+  const token = showCurrent.t = {};
+  const live = () => showCurrent.t === token;
+  zoom = 'fit'; c.classList.remove('zoomed', 'drag'); $('#zLevel').textContent = 'Fit';
+  $('#vZoom').classList.toggle('hidden', !zoomable(k));
+  if (k === 'img') c.innerHTML = `<img src="${url}" alt="">`;
+  else if (k === 'vid') {
+    c.innerHTML = `<video src="${url}" controls autoplay></video>`;
+    c.firstChild.onerror = () => { if (live()) c.innerHTML = noPreview("The browser can't play this video format. Open in app streams it to VLC without copying it to disk."); };
+  }
+  else if (k === 'aud') c.innerHTML = `<audio src="${url}" controls autoplay></audio>`;
+  else if (k === 'pdf') c.innerHTML = `<iframe src="${url}"></iframe>`;
+  else if (k === 'txt' || k === 'csv') {
+    if (it.s > 5e6) { c.innerHTML = noPreview('File too large to preview here.'); }
+    else {
+      c.innerHTML = '<pre>Loading…</pre>';
+      fetch(url).then(r => r.text()).then(t => { if (!live()) return; if (k === 'csv') c.innerHTML = csvTable(t, /\.tsv$/i.test(it.n) ? '\t' : ','); else c.firstChild.textContent = t; });
+    }
+  } else if (k === 'docx') {
+    if (it.s > 40e6) { c.innerHTML = noPreview('File too large to preview here.'); }
+    else {
+      c.innerHTML = '<pre>Loading document…</pre>';
+      loadMammoth().then(() => fetch(url)).then(r => r.arrayBuffer()).then(buf => window.mammoth.convertToHtml({arrayBuffer: buf})).then(res => {
+        if (!live()) return;
+        const f = document.createElement('iframe'); f.setAttribute('sandbox', '');
+        docHtml = res.value; f.srcdoc = docFrame(docHtml, 1);
+        c.innerHTML = ''; c.appendChild(f);
+      }).catch(() => { if (live()) c.innerHTML = noPreview('Could not preview this document.'); });
+    }
+  } else c.innerHTML = noPreview('No preview for this file type.');
+  for (const d of [1, -1]) { const n = vList[(vIdx + d + vList.length) % vList.length]; if (n && kindOf(n) === 'img') new Image().src = '/api/file?id=' + n.id; }
+}
+const noPreview = msg => `<div class="nop">${esc(msg)}<br><br>Use <b>Open in app</b> or <b>Download</b>.</div>`;
+function loadMammoth() {
+  if (window.mammoth) return Promise.resolve();
+  return mammothP = mammothP || new Promise((ok, bad) => { const s = document.createElement('script'); s.src = '/static/mammoth.min.js'; s.onload = ok; s.onerror = bad; document.head.appendChild(s); });
+}
+function csvTable(text, sepChar) {
+  const rows = []; let row = [], f = '', q = false;
+  for (let i = 0; i < text.length && rows.length < 2000; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === sepChar) { row.push(f); f = ''; }
+    else if (ch === '\n') { row.push(f.replace(/\r$/, '')); rows.push(row); row = []; f = ''; }
+    else f += ch;
+  }
+  if (f || row.length) { row.push(f); rows.push(row); }
+  return '<div class="tbl"><table>' + rows.map(r => '<tr>' + r.map(x => `<td>${esc(x)}</td>`).join('') + '</tr>').join('') + '</table></div>';
+}
+function closeViewer() {
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  $('#viewer').classList.add('hidden'); $('#vContent').innerHTML = ''; $('#vContent').classList.remove('zoomed'); showCurrent.t = null;
+}
+$('#vClose').onclick = closeViewer;
+$('#vPrev').onclick = () => step(-1); $('#vNext').onclick = () => step(1);
+let touchX = null;
+$('#vBody').addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, {passive: true});
+$('#vBody').addEventListener('touchend', e => { if (touchX == null) return; const dx = e.changedTouches[0].clientX - touchX; if (Math.abs(dx) > 60) step(dx < 0 ? 1 : -1); touchX = null; });
+
+// ---------- clipboard: Ctrl+C (vault -> file manager), Ctrl+V (file manager -> vault)
+async function copyToClipboard() {
+  const list = sel.size ? selectedItems() : cursor >= 0 ? [shown[cursor]] : [];
+  if (!list.length) return toast('Select files or folders first.', null, 3000);
+  if (inTrash) return toast('Restore items from Trash before copying them.', null, 4000);
+  try {
+    const r = await busy(api('/api/copy', {ids: list.map(i => i.id)}));
+    updateOpen(r.open);
+    toast(`Copied ${r.n} item(s). Paste them in your file manager with Ctrl+V. Paste before locking: the decrypted copies are removed when the vault locks.`, null, 9000);
+  } catch (e) { toast(e.message, null, 8000); }
+}
+document.addEventListener('paste', async ev => {
+  const typing = /^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName) && document.activeElement.type !== 'checkbox';
+  if (typing || anyDialogOpen() || !state.unlocked || $('#vMain').classList.contains('hidden') || !$('#viewer').classList.contains('hidden')) return;
+  ev.preventDefault();
+  const files = [...(ev.clipboardData?.files || [])];
+  if (inTrash || view !== 'folder') return toast('Open a folder first, then paste into it.', null, 4000);
+  try {
+    const r = await busy(api('/api/paste', {parent: cur}));
+    if (!r.none) { toast(`Pasted and encrypted ${r.files} file(s)${r.folders ? ` in ${r.folders} folder(s)` : ''}, ${fmtSize(r.size)}.`, null, 5000); return load(); }
+  } catch (e) { return toast(e.message, null, 6000); }
+  if (files.length) {   // e.g. a screenshot or an image copied from a web page
+    const stamp = new Date().toISOString().slice(0, 19).replace('T', ' ').replace(/:/g, '-');
+    return uploadAll(files.map(f => ({file: f.name && f.name !== 'image.png' ? f : new File([f], `Pasted image ${stamp}.${(f.type.split('/')[1] || 'png').replace('jpeg', 'jpg')}`, {type: f.type})})));
+  }
+  toast('Nothing to paste. Copy files in your file manager first (Ctrl+C).', null, 4000);
+});
+
+// ---------- viewer zoom + full screen
+let zoom = 'fit', docHtml = '';
+const zoomable = k => ['img', 'pdf', 'docx', 'txt', 'csv'].includes(k);
+function curKind() { return vList.length ? kindOf(vList[vIdx]) : null; }
+function setZoom(z, anchor) {
+  const k = curKind(); if (!zoomable(k)) return;
+  if (z !== 'fit') z = Math.max(0.1, Math.min(8, z));
+  const c = $('#vContent');
+  if (k === 'img') {
+    const img = c.querySelector('img'); if (!img || !img.naturalWidth) return;
+    const prev = zoom === 'fit' ? img.getBoundingClientRect().width / img.naturalWidth : zoom;
+    const ax = anchor ? anchor.x : c.clientWidth / 2, ay = anchor ? anchor.y : c.clientHeight / 2;
+    const px = (c.scrollLeft + ax) / prev, py = (c.scrollTop + ay) / prev;
+    zoom = z;
+    if (z === 'fit') { c.classList.remove('zoomed'); img.style.width = ''; }
+    else {
+      c.classList.add('zoomed'); img.style.width = Math.round(img.naturalWidth * z) + 'px';
+      c.scrollLeft = px * z - ax; c.scrollTop = py * z - ay;
+    }
+  } else if (k === 'pdf') {
+    zoom = z; const f = c.querySelector('iframe');
+    if (f) f.src = '/api/file?id=' + vList[vIdx].id + '#zoom=' + (z === 'fit' ? 'page-fit' : Math.round(z * 100));
+  } else {
+    zoom = z; const target = c.querySelector('iframe') || c.firstElementChild;
+    if (k === 'docx' && target && target.tagName === 'IFRAME') target.srcdoc = docFrame(docHtml, z === 'fit' ? 1 : z);
+    else if (target) target.style.zoom = z === 'fit' ? '' : z;
+  }
+  $('#zLevel').textContent = z === 'fit' ? 'Fit' : Math.round(z * 100) + '%';
+}
+function currentScale() {
+  if (zoom !== 'fit') return zoom;
+  const img = $('#vContent img'); return img && img.naturalWidth ? img.getBoundingClientRect().width / img.naturalWidth : 1;
+}
+function zoomBy(f, anchor) { setZoom(currentScale() * f, anchor); }
+const docFrame = (html, z) => '<!doctype html><meta charset="utf-8"><style>body{font:15px/1.55 Calibri,Carlito,"Segoe UI",sans-serif;max-width:760px;margin:30px auto;padding:0 24px;color:#222;zoom:' + z + '}img{max-width:100%}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:4px 8px}</style>' + html;
+function toggleFull() {
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  else $('#viewer').requestFullscreen?.().catch(() => toast('Full screen is not available here.', null, 3000));
+}
+document.addEventListener('fullscreenchange', () => { $('#vFull').textContent = document.fullscreenElement ? '🗗' : '⛶'; $('#vFull').title = document.fullscreenElement ? 'Exit full screen (F)' : 'Full screen (F)'; });
+$('#vFull').onclick = toggleFull;
+$('#zIn').onclick = () => zoomBy(1.25); $('#zOut').onclick = () => zoomBy(0.8);
+$('#zFit').onclick = () => setZoom('fit'); $('#z100').onclick = () => setZoom(1);
+$('#vContent').addEventListener('wheel', ev => {
+  if (curKind() !== 'img' && !(ev.ctrlKey && zoomable(curKind()))) return;
+  if (curKind() !== 'img' && curKind() !== 'pdf') { ev.preventDefault(); zoomBy(ev.deltaY < 0 ? 1.1 : 0.9); return; }
+  if (curKind() !== 'img') return;
+  ev.preventDefault(); const r = $('#vContent').getBoundingClientRect();
+  zoomBy(ev.deltaY < 0 ? 1.15 : 1 / 1.15, {x: ev.clientX - r.left, y: ev.clientY - r.top});
+}, {passive: false});
+$('#vContent').addEventListener('dblclick', ev => {
+  if (curKind() !== 'img') return;
+  const r = $('#vContent').getBoundingClientRect();
+  if (zoom === 'fit') setZoom(Math.max(1, currentScale() * 2), {x: ev.clientX - r.left, y: ev.clientY - r.top}); else setZoom('fit');
+});
+let dragPan = null;
+$('#vContent').addEventListener('mousedown', ev => {
+  const c = $('#vContent'); if (!c.classList.contains('zoomed') || ev.button !== 0) return;
+  dragPan = {x: ev.clientX, y: ev.clientY, l: c.scrollLeft, t: c.scrollTop}; c.classList.add('drag'); ev.preventDefault();
+});
+window.addEventListener('mousemove', ev => { if (!dragPan) return; const c = $('#vContent'); c.scrollLeft = dragPan.l - (ev.clientX - dragPan.x); c.scrollTop = dragPan.t - (ev.clientY - dragPan.y); });
+window.addEventListener('mouseup', () => { if (dragPan) { dragPan = null; $('#vContent').classList.remove('drag'); } });
+
+// ---------- keyboard
+document.addEventListener('keydown', ev => {
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) && document.activeElement.type !== 'checkbox';
+  if (!$('#viewer').classList.contains('hidden')) {
+    if (ev.key === 'Escape') { closeViewer(); ev.preventDefault(); }
+    else if (ev.key === 'ArrowRight' || ev.key === 'PageDown') { step(1); ev.preventDefault(); }
+    else if (ev.key === 'ArrowLeft' || ev.key === 'PageUp') { step(-1); ev.preventDefault(); }
+    else if (ev.key === 'Home') { vIdx = 0; showCurrent(); ev.preventDefault(); }
+    else if (ev.key === 'End') { vIdx = vList.length - 1; showCurrent(); ev.preventDefault(); }
+    else if (ev.key === '+' || ev.key === '=') { zoomBy(1.25); ev.preventDefault(); }
+    else if (ev.key === '-' || ev.key === '_') { zoomBy(0.8); ev.preventDefault(); }
+    else if (ev.key === '0') { setZoom('fit'); ev.preventDefault(); }
+    else if (ev.key === '1') { setZoom(1); ev.preventDefault(); }
+    else if (ev.key.toLowerCase() === 'f' && !ev.ctrlKey) { toggleFull(); ev.preventDefault(); }
+    return;
+  }
+  if (typing || anyDialogOpen() || $('#vMain').classList.contains('hidden')) return;
+  if ((ev.altKey && (ev.code === 'Space' || ev.key === ' ')) || (ev.ctrlKey && ev.key === 'Home')) { goHome(); ev.preventDefault(); return; }
+  if (ev.altKey && ev.key === 'ArrowLeft') { goBack(); ev.preventDefault(); return; }
+  if (ev.altKey && ev.key === 'ArrowRight') { goFwd(); ev.preventDefault(); return; }
+  if (ev.altKey && ev.key === 'ArrowUp') { goUp(); ev.preventDefault(); return; }
+  if (view === 'history') return;
+  const trashTop = cur === 'trash' && view !== 'search';
+  if ((ev.ctrlKey || ev.metaKey) && (ev.key === 'ArrowUp' || ev.key === 'ArrowDown')) { if (isCustom() && sel.size) nudge(ev.key === 'ArrowUp' ? 'up' : 'down'); ev.preventDefault(); return; }
+  if (ev.key === 'ArrowDown' || ev.key === 'ArrowUp') { moveCursor(cursor < 0 ? 0 : cursor + (ev.key === 'ArrowDown' ? 1 : -1), ev.shiftKey); ev.preventDefault(); return; }
+  if (ev.key === 'Home' || ev.key === 'End') { moveCursor(ev.key === 'Home' ? 0 : shown.length - 1, ev.shiftKey); ev.preventDefault(); return; }
+  if (ev.key === 'PageDown' || ev.key === 'PageUp') { moveCursor((cursor < 0 ? 0 : cursor) + (ev.key === 'PageDown' ? 10 : -10), ev.shiftKey); ev.preventDefault(); return; }
+  if (ev.key === ' ' && cursor >= 0) { const id = shown[cursor].id; sel.has(id) ? sel.delete(id) : sel.add(id); lastClick = cursor; render(); ev.preventDefault(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'c' && !window.getSelection().toString()) { copyToClipboard(); ev.preventDefault(); return; }
+  if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'a') { shown.forEach(i => sel.add(i.id)); render(); ev.preventDefault(); }
+  else if (ev.key === 'Escape' && sel.size) { sel.clear(); render(); }
+  else if (ev.key === 'Delete' && sel.size) { act(trashTop ? 'purge' : inTrash ? '' : 'trash', selectedItems()); ev.preventDefault(); }
+  else if (ev.key === 'F2' && sel.size === 1 && !inTrash) { act('ren', selectedItems()); ev.preventDefault(); }
+  else if (ev.key === 'Enter' && (cursor >= 0 || sel.size === 1)) { openItem(cursor >= 0 ? shown[cursor] : selectedItems()[0]); ev.preventDefault(); }
+  else if (ev.key === 'Backspace' && view === 'folder') { goUp(); ev.preventDefault(); }
+});
+
+// ---------- uploads
+async function uploadAll(list) {
+  if (!list.length) return;
+  if (inTrash || view === 'search') return toast('Open a folder first to upload into it.', null, 4000);
+  const total = list.reduce((s, x) => s + x.file.size, 0); let done = 0, n = 0, failed = [];
+  const job = {id: 'up' + Date.now(), label: '', done: 0, total, unit: 'bytes', start: performance.now()};
+  localJobs[job.id] = job;
+  for (const {file, rel} of list) {
+    n++;
+    try {
+      await new Promise((res, rej) => {
+        const x = new XMLHttpRequest();
+        x.open('PUT', `/api/upload?parent=${encodeURIComponent(cur)}&name=${encodeURIComponent(file.name)}&rel=${encodeURIComponent(rel || '')}&mtime=${file.lastModified || ''}`);
+        job.label = `Encrypting ${n} of ${list.length}: ${file.name}`;
+        x.upload.onprogress = e => { job.done = done + e.loaded; renderXfers(); };
+        x.onload = () => x.status < 300 ? res() : rej(new Error((JSON.parse(x.responseText || '{}').error) || 'Upload failed'));
+        x.onerror = () => rej(new Error('Connection lost'));
+        x.send(file);
+      });
+    } catch (e) { failed.push(file.name + ': ' + e.message); }
+    done += file.size; job.done = done; renderXfers();
+  }
+  delete localJobs[job.id]; renderXfers();
+  toast(failed.length ? `Done with ${failed.length} error(s): ${failed[0]}` : `Encrypted ${list.length} item${list.length > 1 ? 's' : ''}.`, null, failed.length ? 8000 : 3000);
+  load();
+}
+$('#bUp').onclick = () => $('#fFiles').click();
+$('#bUpDir').onclick = () => $('#fDir').click();
+$('#fFiles').onchange = e => { uploadAll([...e.target.files].map(file => ({file}))); e.target.value = ''; };
+$('#fDir').onchange = e => { uploadAll([...e.target.files].map(file => ({file, rel: file.webkitRelativePath}))); e.target.value = ''; };
+async function walk(entry, prefix, out) {
+  if (entry.isFile) await new Promise(r => entry.file(f => { out.push({file: f, rel: prefix + f.name}); r(); }, r));
+  else if (entry.isDirectory) {
+    const rd = entry.createReader(); let batch;
+    do { batch = await new Promise(r => rd.readEntries(r, () => r([]))); for (const e of batch) await walk(e, prefix + entry.name + '/', out); } while (batch.length);
+  }
+}
+let dragDepth = 0;
+const isFiles = ev => ev.dataTransfer && [...ev.dataTransfer.types].includes('Files');
+window.addEventListener('dragenter', ev => { if (isFiles(ev) && state.unlocked && !inTrash) { dragDepth++; $('#dropzone').classList.remove('hidden'); } });
+window.addEventListener('dragleave', ev => { if (isFiles(ev) && --dragDepth <= 0) { dragDepth = 0; $('#dropzone').classList.add('hidden'); } });
+window.addEventListener('dragover', ev => { if (isFiles(ev)) ev.preventDefault(); });
+window.addEventListener('drop', async ev => {
+  if (!isFiles(ev)) return; ev.preventDefault(); dragDepth = 0; $('#dropzone').classList.add('hidden');
+  if (!state.unlocked) return;
+  const out = [], entries = [...ev.dataTransfer.items].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (entries.length) for (const e of entries) await walk(e, '', out);
+  else for (const f of ev.dataTransfer.files) out.push({file: f});
+  uploadAll(out);
+});
+
+// ---------- progress panel (% + time left) for every long operation
+const localJobs = {}; let serverJobs = [], busyCount = 0, pollT = null;
+function fmtDur(sec) {
+  if (!isFinite(sec) || sec < 0) return '';
+  sec = Math.round(sec);
+  if (sec < 60) return `${sec} s`;
+  if (sec < 3600) return `${Math.floor(sec / 60)} min ${sec % 60} s`;
+  return `${Math.floor(sec / 3600)} h ${Math.floor(sec % 3600 / 60)} min`;
+}
+function renderXfers() {
+  const now = performance.now();
+  const jobs = [...Object.values(localJobs).map(j => ({...j, elapsed: (now - j.start) / 1000})), ...serverJobs];
+  $('#xfers').innerHTML = jobs.map(j => {
+    const pct = j.total ? Math.min(100, j.done / j.total * 100) : 0, rate = j.elapsed > 0 ? j.done / j.elapsed : 0;
+    const left = rate > 0 && j.elapsed > 0.7 ? fmtDur((j.total - j.done) / rate) + ' left' : 'estimating…';
+    const amt = j.unit === 'files' ? `${j.done} of ${j.total} files` : `${fmtSize(j.done)} of ${fmtSize(j.total)}`;
+    const speed = j.unit === 'bytes' && rate > 0 && j.elapsed > 0.7 ? ` · ${fmtSize(rate)}/s` : '';
+    return `<div class="xfer"><div class="xl"><span title="${esc(j.label)}">${esc(j.label)}</span><b>${pct.toFixed(pct < 10 ? 1 : 0)}%</b></div>
+      <div class="prog"><i style="width:${pct}%"></i></div><div class="xm">${amt}${speed} · ${pct >= 100 ? 'finishing…' : left}</div></div>`;
+  }).join('');
+}
+async function pollProgress() {
+  try { serverJobs = (await api('/api/progress')).tasks; } catch { serverJobs = []; }
+  renderXfers();
+  if (busyCount > 0) pollT = setTimeout(pollProgress, 400); else { pollT = null; serverJobs = []; renderXfers(); }
+}
+async function busy(promise) {
+  busyCount++; if (!pollT) pollT = setTimeout(pollProgress, 250);
+  try { return await promise; } finally { busyCount--; }
+}
+
+// ---------- history (audit)
+let hType = '', hOffset = 0, hEvents = [], hLabels = {};
+const EV_CLASS = {shared: 'out', device_added: 'sec', device_removed: 'sec', streamed: 'out', encrypted: 'add', added_back: 'add', folder_created: 'add', saved_back: 'add', opened: 'out', revealed: 'out', downloaded: 'out', exported: 'out', viewed: 'out',
+  trashed: 'rm', deleted: 'rm', trash_emptied: 'rm', unlock_failed: 'sec', recover_failed: 'sec', password_changed: 'sec', password_reset: 'sec',
+  recovery_key_created: 'sec', recovery_key_removed: 'sec', questions_set: 'sec', questions_removed: 'sec', settings: 'sec'};
+function showHistory() {
+  view = 'history'; sel.clear(); closeViewer();
+  $('#list').classList.add('hidden'); $('#selBar').classList.add('hidden'); $('#folderBtns').classList.add('hidden'); $('#bEmpty').classList.add('hidden');
+  $('#histView').classList.remove('hidden'); $('#bHist').classList.add('primary'); $('#sortSel').classList.add('hidden'); $('#customHint').classList.add('hidden'); $('#bTrash').classList.remove('primary');
+  $('#crumbs').innerHTML = '<a data-id="root">Vault</a><span>›</span><b style="padding:3px 6px">History</b>';
+  $('#crumbs').querySelector('a').onclick = () => load('root');
+  $('#search').placeholder = 'Search history';
+  hOffset = 0; hEvents = []; loadHistory();
+}
+function leaveHistory() {
+  $('#histView').classList.add('hidden'); $('#list').classList.remove('hidden'); $('#bHist').classList.remove('primary');
+  $('#search').placeholder = 'Search the whole vault';
+}
+async function loadHistory() {
+  let r;
+  try { r = await api(`/api/history?type=${hType}&q=${encodeURIComponent($('#search').value.trim())}&offset=${hOffset}&limit=200`); }
+  catch (e) { return toast(e.message, null, 5000); }
+  hLabels = r.labels; hEvents = hOffset ? hEvents.concat(r.events) : r.events;
+  const v = $('#hVerify');
+  v.className = 'verify ' + (r.problems.length ? 'bad' : 'good');
+  v.textContent = r.problems.length ? '⚠ History integrity problem: ' + r.problems.join(' ') : `✓ Verified: ${r.all} event${r.all === 1 ? '' : 's'}, all sealed, none missing or altered.`;
+  $('#hLogPath').textContent = r.logPath; $('#hNames').checked = r.plainLogNames;
+  let h = '<div class="hrow head"><div>Time</div><div>Action</div><div>Item</div><div style="text-align:right">Size</div><div>Computer</div></div>';
+  if (!hEvents.length) h += '<div class="empty">No matching events.</div>';
+  for (const e of hEvents) {
+    const label = (hLabels[e.ev] || e.ev).toLowerCase().replace(/^./, c => c.toUpperCase());
+    const item = e.name ? `<div title="${esc(e.name)}">${e.kind === 'd' ? '📁 ' : ''}${esc(e.name)}</div>` : '';
+    const extra = [e.path && 'in ' + e.path, e.from && 'from ' + e.from, e.dest && 'to ' + e.dest, e.files && e.kind === 'd' && e.files + ' files', e.via && 'via ' + e.via, e.why, e.note].filter(Boolean).join(' · ');
+    h += `<div class="hrow"><div class="t">${fmtDate(e.t)}</div><div><span class="ev ${EV_CLASS[e.ev] || ''}" title="#${e.seq}">${esc(label)}</span></div>
+      <div class="it">${item}<div class="f" title="${esc(extra)}">${esc(extra)}</div></div><div class="sz">${e.size != null ? fmtSize(e.size) : ''}</div>
+      <div class="pc" title="${esc((e.user ? e.user + ' on ' : '') + (e.host || ''))}">${esc(e.host || '')}${e.os ? ' · ' + esc(e.os) : ''}</div></div>`;
+  }
+  $('#hList').innerHTML = h;
+  $('#hMore').classList.toggle('hidden', hEvents.length >= r.total);
+}
+$('#bHist').onclick = showHistory;
+$('#histView').querySelectorAll('.chip').forEach(c => c.onclick = () => {
+  $('#histView').querySelectorAll('.chip').forEach(x => x.classList.toggle('on', x === c)); hType = c.dataset.h; hOffset = 0; loadHistory();
+});
+$('#hMore').onclick = () => { hOffset = hEvents.length; loadHistory(); };
+$('#hCsv').onclick = async () => {
+  const ok = await ask('Export history as CSV?', [{text: 'The CSV is a normal, unencrypted file saved to this computer. It includes file names.'}], 'Export');
+  if (ok) location.href = '/api/history.csv';
+};
+$('#hPlain').onclick = () => api('/api/openlog', {}).catch(e => toast(e.message, null, 5000));
+$('#hNames').onchange = async e => {
+  try { await api('/api/settings', {plainLogNames: e.target.checked}); toast(e.target.checked ? 'File names will be written to the plain log.' : 'File names will be left out of the plain log.', null, 4000); loadHistory(); }
+  catch (err) { e.target.checked = !e.target.checked; toast(err.message, null, 5000); }
+};
+$('#lockLog').onclick = async () => {
+  try {
+    const r = await api('/api/plainlog');
+    $('#logPath').textContent = r.path + (r.lines.length >= 500 ? ' (last 500 lines)' : '');
+    $('#logText').textContent = r.lines.length ? r.lines.slice().reverse().join('\n') : 'No activity yet.';
+    $('#logDlg').showModal();
+  } catch (e) { toast(e.message, null, 5000); }
+};
+$('#logClose').onclick = () => $('#logDlg').close();
+
+// ---------- security
+function showKey(key) {
+  $('#keyText').textContent = key; const d = $('#keyDlg'); d.showModal();
+  $('#keyCopy').onclick = async () => { try { await navigator.clipboard.writeText(key); toast('Recovery key copied.', null, 2500); } catch { toast('Copy failed. Select the key and copy it.', null, 3000); } };
+  $('#keyDl').onclick = () => {
+    const txt = `DriveVault recovery key\r\n\r\n${key}\r\n\r\nVault: ${state.location ? driveName(state.location) : ''}\r\nCreated: ${new Date().toLocaleString()}\r\n\r\nUse "Forgot password?" on the unlock screen and enter this key to set a new password.\r\nKeep this file away from the drive.\r\n`;
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt], {type: 'text/plain'})); a.download = 'DriveVault recovery key.txt'; a.click();
+  };
+  $('#keyDone').onclick = () => { d.close(); refresh(); };
+}
+async function openSecurity() {
+  const info = await api('/api/security');
+  $('#sKeyState').innerHTML = info.key ? '<span class="tag">On</span>' : '';
+  $('#sKey').textContent = info.key ? 'Replace' : 'Create'; $('#sKeyRm').classList.toggle('hidden', !info.key);
+  $('#sQState').innerHTML = info.questions ? '<span class="tag">On</span>' : '';
+  $('#sQText').textContent = info.questions ? info.questions.join(' · ') : 'Three questions only you can answer.';
+  $('#sQ').textContent = info.questions ? 'Change' : 'Set up'; $('#sQRm').classList.toggle('hidden', !info.questions);
+  $('#sDevState').innerHTML = info.device ? '<span class="tag">On</span>' : '';
+  $('#sDevText').textContent = info.device ? `${info.device} can reset the password: plug the drive into that phone, tap Forgot password, confirm its fingerprint / PIN.` : 'Reset a forgotten password from your phone with its fingerprint / PIN. Set it up in the DriveVault Android app: Security → Trust this phone.';
+  $('#sDevRm').classList.toggle('hidden', !info.device);
+  if (!$('#secDlg').open) $('#secDlg').showModal();
+}
+$('#bSec').onclick = openSecurity;
+$('#bRecSetup').onclick = openSecurity;
+$('#bRecLater').onclick = () => { sessionStorageSet('recLater', '1'); $('#recBanner').classList.add('hidden'); };
+$('#secClose').onclick = () => { $('#secDlg').close(); refresh(); };
+$('#sPw').onclick = () => ask('Change password', [{label: 'Current password', type: 'password'}, {label: 'New password', type: 'password'}, {label: 'Confirm new password', type: 'password'},
+  ...(state.kdf === 'pbkdf2-sha256' ? [{text: OLD_APPS_NOTE}] : [])], 'Change',
+  async v => { if (v[1] !== v[2]) throw new Error('New passwords do not match.'); await api('/api/passwd', {old: v[0], new: v[1]}); state.kdf = 'argon2id'; })
+  .then(v => v && toast('Password changed. Recovery options still work.', null, 3500));
+$('#sKey').onclick = async () => {
+  let key;
+  const ok = await askPassword('Create a recovery key', 'Create key', async p => { key = (await api('/api/security/key', {password: p})).key; });
+  if (ok) { showKey(key); openSecurity(); }
+};
+$('#sKeyRm').onclick = async () => { if (await askPassword('Remove recovery key?', 'Remove', p => api('/api/security/remove', {password: p, kind: 'key'}))) { openSecurity(); toast('Recovery key removed.', null, 3000); } };
+$('#sDevRm').onclick = async () => { if (await askPassword('Remove trusted phone?', 'Remove', p => api('/api/security/remove', {password: p, kind: 'device'}))) { openSecurity(); toast('Trusted phone removed.', null, 3000); } };
+$('#sQRm').onclick = async () => { if (await askPassword('Remove security questions?', 'Remove', p => api('/api/security/remove', {password: p, kind: 'questions'}))) { openSecurity(); toast('Security questions removed.', null, 3000); } };
+$('#sQ').onclick = () => {
+  const opts = QUESTIONS.map(q => `<option>${esc(q)}</option>`).join('') + '<option value="__own">Write my own question…</option>';
+  $('#qRows').innerHTML = [0, 1, 2].map(i => `<label for="qs${i}">Question ${i + 1}</label><select id="qs${i}">${opts}</select>
+    <input type="text" id="qo${i}" class="hidden" placeholder="Your question" style="margin-top:6px"><input type="text" id="qa${i}" placeholder="Answer" style="margin-top:6px" spellcheck="false" autocomplete="off">`).join('');
+  [0, 1, 2].forEach(i => { $('#qs' + i).selectedIndex = i; $('#qs' + i).onchange = e => $('#qo' + i).classList.toggle('hidden', e.target.value !== '__own'); });
+  $('#qPw').value = ''; $('#qErr').textContent = ''; $('#qDlg').showModal(); $('#qa0').focus();
+};
+$('#qCancel').onclick = () => $('#qDlg').close();
+$('#qForm').onsubmit = async ev => {
+  ev.preventDefault();
+  const questions = [0, 1, 2].map(i => $('#qs' + i).value === '__own' ? $('#qo' + i).value : $('#qs' + i).value);
+  const answers = [0, 1, 2].map(i => $('#qa' + i).value);
+  try {
+    $('#qErr').textContent = 'Saving…';
+    await api('/api/security/questions', {password: $('#qPw').value, questions, answers});
+    $('#qDlg').close(); openSecurity(); toast('Security questions saved.', null, 3000);
+  } catch (e) { $('#qErr').textContent = e.message; }
+};
+
+// ---------- header actions
+$('#bNew').onclick = async () => { const v = await ask('New folder', [{label: 'Folder name', value: 'New folder'}], 'Create', v => api('/api/mkdir', {parent: cur, name: v[0]})); if (v) load(); };
+async function doLock(quit) {
+  try {
+    const r = await busy(api(quit ? '/api/quit' : '/api/lock', {}));
+    const msg = (r.saved.length ? `Saved ${r.saved.length} edited file(s) into the vault. ` : '') + (r.leftover ? 'Some temporary files are still in use and could not be deleted; close the apps using them.' : '');
+    if (quit) { document.body.innerHTML = `<div class="center"><div class="card"><h1>Vault locked</h1><p>${esc(msg)}DriveVault has stopped. You can close this tab and unplug the drive.</p></div></div>`; return; }
+    if (msg) toast(msg, null, 7000);
+  } catch (e) { toast(e.message, null, 6000); }
+  refresh();
+}
+$('#bLock').onclick = () => doLock(false);
+$('#bQuit').onclick = () => doLock(true);
+$('#bSync').onclick = async () => { try { const r = await busy(api('/api/sync', {})); toast(r.saved.length ? 'Saved: ' + r.saved.join(', ') : 'No changes to save.', null, 4000); load(); } catch (e) { toast(e.message, null, 6000); } };
+$('#bStaleSave').onclick = async () => { const r = await busy(api('/api/stale', {action: 'save'})); $('#staleBanner').classList.add('hidden'); toast(r.saved.length ? 'Recovered: ' + r.saved.join(', ') : 'Nothing had changed. Leftover copies deleted.', null, 5000); load(); };
+$('#bStaleDrop').onclick = async () => { await api('/api/stale', {action: 'drop'}); $('#staleBanner').classList.add('hidden'); toast('Leftover copies deleted.', null, 3000); };
+
+setInterval(() => refresh().catch(() => {}), 15000);
+refresh().then(() => state.unlocked && load()).catch(() => { document.body.innerHTML = '<div class="center"><div class="card"><h1>DriveVault is not running</h1><p>Start it again from the drive.</p></div></div>'; });
+</script>
+</body>
+</html>

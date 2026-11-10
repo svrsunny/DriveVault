@@ -1,0 +1,3 @@
+-keep class com.drivevault.app.DocBridge { *; }
+-keepclassmembers class * { @android.webkit.JavascriptInterface <methods>; }
+-dontwarn org.slf4j.**

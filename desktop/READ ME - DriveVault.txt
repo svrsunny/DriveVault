@@ -1,0 +1,53 @@
+DRIVEVAULT - password-protected folder on this drive
+====================================================
+
+Your private files are kept encrypted (AES-256) in DriveVault\vault.
+Without the password they are unreadable on any computer or phone.
+
+WINDOWS
+  Double-click "Open Vault (Windows).bat".
+  The first time, it may ask you to install Python 3 (python.org, tick "Add python.exe to PATH").
+
+LINUX (any distro)
+  Open a terminal in this drive and run:   sh open-vault-linux.sh
+  The first time, it installs the python "cryptography" package (may ask for your password).
+
+ANDROID
+  Install DriveVault-Android.apk on the phone (allow "Install unknown apps" when asked),
+  allow "All files access", plug in the drive and pick it. Same password, same files.
+  Videos/PDFs/photos open inside the app; "Open with" streams to other apps (e.g. VLC)
+  without writing a decrypted copy. Security -> "Trust this phone" lets this phone reset
+  a forgotten password with its fingerprint / PIN.
+
+USING IT
+  - The first screen shows which drive the vault goes on. Press Change to pick a
+    different drive (e.g. the USB drive). DriveVault copies itself onto that drive.
+  - The first run asks you to create a password, then shows a RECOVERY KEY.
+    Save it away from the drive (print it, password manager, photo on your phone).
+    "Forgot password?" on the unlock screen resets the password with the key,
+    or with security questions if you set them up (Security button).
+  - Upload files/folders or drag them into the browser window. They are encrypted onto the drive.
+  - Click a file to preview it: photos, videos, audio, PDF, Word (.docx), CSV, text.
+    Use the arrow keys or the < > buttons to move to the next/previous file.
+  - Deleted items go to Trash. Restore them, delete them one by one, or Empty trash.
+  - Search box searches the whole vault. Tick boxes (Shift for a range) for bulk actions.
+  - Videos/music: "Open in app" streams straight into VLC (install VLC for best results),
+    so big movies play instantly and are never copied to disk decrypted.
+  - Ctrl+V pastes files copied in Explorer/Files into the vault; Ctrl+C copies vault files
+    so you can paste them in Explorer/Files (Linux needs wl-clipboard or xclip).
+  - "Copy to computer" decrypts selected files/folders into your Downloads folder.
+  - Every encrypt / decrypt / copy shows a progress bar with percentage, speed and time left.
+  - HISTORY button: an encrypted, tamper-checked record of everything that was added, opened,
+    copied out, renamed, moved, deleted, and every unlock (with computer name). Export as CSV.
+  - DriveVault\activity.log is a plain-text copy of the history, readable without the password
+    (also from "Activity log" on the unlock screen). It shows file names only if you turn that on.
+  - "Open in app" / "Show in folder" decrypt a temporary copy on THIS computer.
+    Edits you save are put back into the vault when you press Lock, and the copy is deleted.
+  - Always press "Lock & quit" before unplugging the drive.
+  - Auto-lock happens after 15 minutes of no activity, unless decrypted files are open.
+
+IMPORTANT
+  - Only files inside the vault are protected. Anything saved elsewhere on the drive is not.
+  - Keep the drive formatted as exFAT so Windows, Linux and Android can all read it.
+  - Do not edit or delete anything inside DriveVault\vault by hand.
+  - Back up the DriveVault\vault folder now and then. It stays encrypted when copied.

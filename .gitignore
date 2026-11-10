@@ -1,0 +1,61 @@
+# --- secrets: never commit ---
+*.jks
+*.keystore
+*.p12
+*.pfx
+*.pem
+*.key
+.env
+.env.*
+android/signing/
+android/local.properties
+secrets.*
+
+# --- vault data, logs, backups (if you test inside the repo) ---
+DriveVault/vault/
+**/DriveVault/vault/
+vault.json
+vault.json.bak
+index.dvx*
+history.dvl
+*.dvb
+activity.log
+activity.1.log
+*.log
+*.bak
+*.db
+*.sqlite
+*.sqlite3
+.drivevault-session.json
+
+# --- build outputs and release files ---
+android/.gradle/
+android/.kotlin/
+android/build/
+android/*/build/
+*.apk
+*.aab
+*.idsig
+dist/
+DriveVault-*.zip
+SHA256SUMS*
+
+# --- test output, recordings ---
+tests/ui-failure.png
+*.mp4
+*.webm
+*.mkv
+*.mov
+*.gif
+
+# --- python ---
+__pycache__/
+*.pyc
+
+# --- editors / OS ---
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini

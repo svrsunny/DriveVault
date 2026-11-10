@@ -1,0 +1,47 @@
+name: Bug report
+description: Something doesn't work as described
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Security problem?** Don't report it here; use [private reporting](https://github.com/svrsunny/DriveVault/security/advisories/new).
+        **Never attach** your vault, `vault.json`, recovery key, real file names or an `activity.log` from a real drive.
+        The demo vault (`python tools/demo.py`) is a safe way to reproduce problems and take screenshots.
+  - type: input
+    id: version
+    attributes:
+      label: DriveVault version
+      description: Shown at the bottom of the desktop app, or in Android's app info.
+      placeholder: "1.8.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options: [Windows, Linux, Android]
+      multiple: true
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System details
+      description: Windows version / Linux distribution and Python version / Android version and phone model
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected and what happened instead
+      description: Include the exact error message if there was one.
+    validations:
+      required: true
