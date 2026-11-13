@@ -68,6 +68,12 @@ def work_root():
     return base
 
 
+def downloads_dir():
+    """Where "Copy to computer" puts its copies: the user's Downloads folder, or the home folder if there is none."""
+    downloads = Path.home() / "Downloads"
+    return downloads if downloads.is_dir() else Path.home()
+
+
 def ensure_space(folder, needed, what):
     free = shutil.disk_usage(folder).free
     if free < needed + (200 << 20):
@@ -1116,8 +1122,7 @@ def make_handler(app, token, port):
             ids = [i for i in ids if i in v.entries]
             if not ids:
                 raise VaultError("Nothing selected.")
-            downloads = Path.home() / "Downloads"
-            dest = (downloads if downloads.is_dir() else Path.home()) / time.strftime("DriveVault export %Y-%m-%d %H%M%S")
+            dest = downloads_dir() / time.strftime("DriveVault export %Y-%m-%d %H%M%S")
             dest.mkdir(parents=True, exist_ok=True)
             total = sum(v.tree_size(i)[0] for i in ids)
             try:

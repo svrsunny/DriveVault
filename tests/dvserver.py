@@ -23,9 +23,9 @@ class Server:
         dv.find_player = lambda: None
         dv.clipboard_get_files = lambda: list(self.clipboard_in)
         dv.clipboard_set_files = lambda paths: self.clipboard_out.extend(paths)
-        self.home = os.path.join(self.dir, "home")              # "Copy to computer" writes to ~/Downloads
-        os.makedirs(os.path.join(self.home, "Downloads"))
-        os.environ["USERPROFILE"] = os.environ["HOME"] = self.home
+        self.downloads = os.path.join(self.dir, "Downloads")    # "Copy to computer" writes here
+        os.makedirs(self.downloads)
+        dv.downloads_dir = lambda: dv.Path(self.downloads)
         self.vault_dir = os.path.join(self.dir, "drive", "DriveVault", "vault")
         os.makedirs(self.vault_dir)
         self.app = dv.App(self.vault_dir)

@@ -223,7 +223,7 @@ def run(headed=False):
             assert open(d.value.path(), "rb").read() == samples["notes.txt"]
             u.pick("red.png"); page.click("#selActs [data-s=export]")
             expect(page.locator("#toastText")).to_contain_text("Copied 1 file(s)")
-            out = [os.path.join(r, f) for r, _, fs in os.walk(os.path.join(s.home, "Downloads")) for f in fs]
+            out = [os.path.join(r, f) for r, _, fs in os.walk(s.downloads) for f in fs]
             assert len(out) == 1 and open(out[0], "rb").read() == samples["red.png"], out
 
             step("Open in app / Show in folder; edits written back on lock")
